@@ -72,7 +72,7 @@ jobs:
         subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
     - name: Deploy Container App
-      uses: azure/container-apps-deploy-action@v1
+      uses: azure/container-apps-deploy-action@v2
       with:
         imageToDeploy: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/auth:${{ github.sha }}
         containerAppName: ca-dlqt-auth
