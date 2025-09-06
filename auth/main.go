@@ -47,7 +47,7 @@ func authMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Parse and validate JWT token
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 			// For Azure AD tokens, we need to validate against the public keys
 			// This is a simplified version - in production, implement proper validation
 			return []byte("secret"), nil
