@@ -28,8 +28,6 @@ jobs:
         client-id: ${{ vars.AZURE_CLIENT_ID }}
         tenant-id: ${{ vars.AZURE_TENANT_ID }}
         subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      env:
-        AZURE_CORE_OUTPUT: none
 
     - uses: opentofu/setup-opentofu@v1
 
@@ -74,7 +72,9 @@ jobs:
     - uses: actions/github-script@v6
       if: github.event_name == 'pull_request'
       env:
-        PLAN: "tofu\n${{ steps.plan.outputs.stdout }}"
+        PLAN: "tofu
+
+          ${{ steps.plan.outputs.stdout }}"
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
