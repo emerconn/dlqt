@@ -21,7 +21,7 @@ resource "azurerm_container_app_environment" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-resource "azurerm_container_app" "this" {
+resource "azurerm_container_app" "auth" {
   name                         = "ca-dlqt-auth"
   container_app_environment_id = azurerm_container_app_environment.this.id
   resource_group_name          = azurerm_resource_group.this.name
@@ -30,7 +30,7 @@ resource "azurerm_container_app" "this" {
   template {
     container {
       name   = "auth"
-      image  = "dlqt/auth:latest"
+      image  = "ghcr.io/emerconn/dlqt/auth:latest"
       cpu    = 0.25
       memory = "0.5Gi"
 
@@ -63,5 +63,5 @@ resource "azurerm_container_app" "this" {
 resource "azurerm_role_assignment" "this" {
   scope                = azurerm_servicebus_namespace.this.id
   role_definition_name = "Azure Service Bus Data Owner"
-  principal_id         = azurerm_container_app.this.identity[0].principal_id
+  principal_id         = azurerm_container_app.auth.identity[0].principal_id
 }
