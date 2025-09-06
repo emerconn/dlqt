@@ -15,15 +15,13 @@ resource "azurerm_servicebus_queue" "this" {
   namespace_id = azurerm_servicebus_namespace.this.id
 }
 
-# Container App Environment
 resource "azurerm_container_app_environment" "this" {
   name                = "cae-dlqt"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
 }
 
-# Auth Service Container App
-resource "azurerm_container_app" "auth_service" {
+resource "azurerm_container_app" "this" {
   name                         = "ca-dlqt-auth"
   container_app_environment_id = azurerm_container_app_environment.this.id
   resource_group_name          = azurerm_resource_group.this.name
@@ -61,9 +59,8 @@ resource "azurerm_container_app" "auth_service" {
   }
 }
 
-# RBAC for Service Bus
-resource "azurerm_role_assignment" "auth_service_sb" {
+resource "azurerm_role_assignment" "this" {
   scope                = azurerm_servicebus_namespace.this.id
   role_definition_name = "Azure Service Bus Data Owner"
-  principal_id         = azurerm_container_app.auth_service.identity[0].principal_id
+  principal_id         = azurerm_container_app.this.identity[0].principal_id
 }
