@@ -75,7 +75,8 @@ jobs:
         ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
         ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-    - uses: actions/github-script@v8
+    - name: Create PR Comment
+      uses: actions/github-script@v8
       if: github.event_name == 'pull_request'
       env:
         PLAN: "tofu
