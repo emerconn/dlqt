@@ -138,3 +138,37 @@ func RetriggerDeadLetterMessage(ctx context.Context, client *azservicebus.Client
 	log.Printf("Successfully retriggered message %s from DLQ to main queue", messageID)
 	return nil
 }
+
+// FetchDeadLetterMessage fetches one message from the dead letter queue
+func FetchDeadLetterMessage(ctx context.Context, client *azservicebus.Client, queue string) (*azservicebus.ReceivedMessage, error) {
+	// Create receiver for dead-letter queue
+	options := &azservicebus.ReceiverOptions{
+		SubQueue: azservicebus.SubQueueDeadLetter,
+	}
+	receiver, err := client.NewReceiverForQueue(queue, options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create DLQ receiver for queue '%s': %w", queue, err)
+	}
+	defer receiver.Close(ctx)
+
+	// Receive one message from DLQ
+	messages, err := receiver.ReceiveMessages(ctx, 1, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to receive messages from DLQ: %w", err)
+	}
+
+	if len(messages) == 0 {
+		return nil, nil // No messages available
+	}
+
+	message := messages[0]
+	log.Printf("Fetched message %s from DLQ", message.MessageID)
+
+	// Complete the message to remove it from the DLQ
+	err = receiver.CompleteMessage(ctx, message, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to complete DLQ message: %w", err)
+	}
+
+	return message, nil
+}

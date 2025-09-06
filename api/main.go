@@ -17,16 +17,16 @@ func min(a, b int) int {
 	return b
 }
 
-// main is the entry point of the authentication service
-// It sets up the HTTP server, middleware, and routing for the auth service
+// main is the entry point of the API service
+// It sets up the HTTP server, middleware, and routing for the API service
 func main() {
 	// Service startup logging with timestamp for debugging deployment issues
-	log.Println("=== Starting DLQT Auth Service ===")
+	log.Println("=== Starting DLQT API Service ===")
 	log.Printf("Timestamp: %s", time.Now().Format(time.RFC3339))
 
-	// Create an instance of our auth service - this handles the business logic
-	authService := &AuthService{}
-	log.Println("Auth service instance created")
+	// Create an instance of our API service - this handles the business logic
+	apiService := &APIService{}
+	log.Println("API service instance created")
 
 	// Setup HTTP server using Gorilla Mux router
 	// Mux provides more advanced routing features than the standard library
@@ -41,15 +41,15 @@ func main() {
 	// Register our main endpoint for checking authorization
 	// Only POST requests to /check-auth will be handled by this route
 	log.Println("Registering /check-auth endpoint...")
-	r.HandleFunc("/check-auth", authService.handleCheckAuth).Methods("POST")
+	r.HandleFunc("/check-auth", apiService.handleCheckAuth).Methods("POST")
 
 	// Log the service configuration for operational visibility
-	log.Println("=== Auth service configuration complete ===")
+	log.Println("=== API service configuration complete ===")
 	log.Println("Available endpoints:")
 	log.Println("  POST /check-auth - Check user authorization for namespace/queue")
 
 	// Start the HTTP server on port 8080
 	// log.Fatal will terminate the program if the server fails to start
-	log.Println("Starting auth service on :8080")
+	log.Println("Starting API service on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

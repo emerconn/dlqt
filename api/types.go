@@ -1,6 +1,6 @@
 package main
 
-type AuthService struct{}
+type APIService struct{}
 
 type CheckAuthRequest struct {
 	Namespace string `json:"namespace"`

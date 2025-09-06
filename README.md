@@ -28,12 +28,12 @@ Tool suite for interacting with Azure Service Bus DLQ
 The system consists of:
 1. `dlqt` - Developer CLI tool for secure message retriggering
 2. `dlqtools` - Admin CLI tool with direct Service Bus access
-3. `auth` - Containerized API service for secure message retriggering
-4. Azure Service Bus with RBAC for the auth service
+3. `api` - Containerized API service for secure message retriggering
+4. Azure Service Bus with RBAC for the API service
  
 **Developer Workflow:**
 - Developers use `dlqt retrigger` which calls the `auth` API with their Azure AD token
-- The auth service validates the token and performs the retrigger operation using its managed identity
+- The API service validates the token and performs the retrigger operation using its managed identity
 - Developers cannot modify message contents, only retrigger
  
 **Admin Workflow:**
@@ -81,7 +81,7 @@ tofu plan
 tofu apply
 ```
 
-2. Build and push the auth service container:
+2. Build and push the API service container:
 ```bash
 cd auth
 docker build -t dlqt/auth .

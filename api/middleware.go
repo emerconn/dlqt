@@ -38,7 +38,7 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Check for required app role
+		// Check for required scopes (dlq.fetch or dlq.retrigger)
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
@@ -53,22 +53,23 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Check for required app role
-		hasRole := false
-		if roles, ok := claims["roles"].([]interface{}); ok {
-			for _, role := range roles {
-				if roleStr, ok := role.(string); ok && roleStr == "ServiceBus.DLQRetrigger" {
-					hasRole = true
-					log.Printf("User has required role: %s", roleStr)
+		// Check for required scopes (dlq.fetch or dlq.retrigger)
+		hasRequiredScope := false
+		if scp, ok := claims["scp"].(string); ok {
+			scopes := strings.Fields(scp)
+			for _, scope := range scopes {
+				if scope == "dlq.fetch" || scope == "dlq.retrigger" {
+					hasRequiredScope = true
+					log.Printf("User has required scope: %s", scope)
 					break
 				}
 			}
 		}
 
-		if !hasRole {
-			log.Printf("User missing required role: ServiceBus.DLQRetrigger")
-			log.Printf("Available roles: %v", claims["roles"])
-			http.Error(w, "Insufficient permissions - missing ServiceBus.DLQRetrigger role", http.StatusForbidden)
+		if !hasRequiredScope {
+			log.Printf("User missing required scopes: dlq.fetch or dlq.retrigger")
+			log.Printf("Available scopes: %v", claims["scp"])
+			http.Error(w, "Insufficient permissions - missing required scope (dlq.fetch or dlq.retrigger)", http.StatusForbidden)
 			return
 		}
 

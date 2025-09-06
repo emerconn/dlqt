@@ -50,19 +50,28 @@ func main() {
 				Sources:  cli.EnvVars("AZURE_SERVICEBUS_QUEUE"),
 				Required: true,
 			},
-			&cli.StringFlag{
-				Name:     "auth-service-url",
-				Usage:    "URL of the auth service",
-				Sources:  cli.EnvVars("AUTH_SERVICE_URL"),
-				Required: true,
-			},
 		},
 		Commands: []*cli.Command{
 			{
-				Name:  "check-auth",
-				Usage: "Check if user is authorized to access a Service Bus namespace and queue",
+				Name:  "fetch",
+				Usage: "Fetch one message from the dead letter queue",
 				Action: func(ctx context.Context, c *cli.Command) error {
-					return checkAuth(ctx, c)
+					return fetch(ctx, c)
+				},
+			},
+			{
+				Name:  "retrigger",
+				Usage: "Retrigger a message from the dead letter queue back to the main queue",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "message-id",
+						Aliases:  []string{"m"},
+						Usage:    "the message ID to retrigger",
+						Required: true,
+					},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					return retrigger(ctx, c)
 				},
 			},
 		},

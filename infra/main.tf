@@ -1,7 +1,7 @@
 # Generate random UUIDs for Azure AD app registration
-resource "random_uuid" "oauth2_scope_id" {}
+resource "random_uuid" "oauth2_scope_fetch_id" {}
 
-resource "random_uuid" "app_role_id" {}
+resource "random_uuid" "oauth2_scope_retrigger_id" {}
 
 resource "azuread_application" "dlqt" {
   display_name     = "dlqt"
@@ -13,24 +13,26 @@ resource "azuread_application" "dlqt" {
     requested_access_token_version = 2
 
     oauth2_permission_scope {
-      admin_consent_description  = "Allow the application to manage dead letter queue operations on behalf of the signed-in user."
-      admin_consent_display_name = "Manage DLQ Operations"
+      admin_consent_description  = "Allow the application to fetch messages from dead letter queues on behalf of the signed-in user."
+      admin_consent_display_name = "Fetch DLQ Messages"
       enabled                    = true
-      id                         = random_uuid.oauth2_scope_id.result
+      id                         = random_uuid.oauth2_scope_fetch_id.result
       type                       = "User"
-      user_consent_description   = "Allow the application to manage dead letter queue operations on your behalf."
-      user_consent_display_name  = "Manage DLQ Operations"
-      value                      = "dlq.manage.user"
+      user_consent_description   = "Allow the application to fetch dead letter queue messages on your behalf."
+      user_consent_display_name  = "Fetch DLQ Messages"
+      value                      = "dlq.fetch"
     }
-  }
 
-  app_role {
-    allowed_member_types = ["User"]
-    description          = "Can retrigger dead letter queue messages"
-    display_name         = "ServiceBus DLQ Retrigger"
-    enabled              = true
-    id                   = random_uuid.app_role_id.result
-    value                = "ServiceBus.DLQRetrigger"
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the application to retrigger messages from dead letter queues on behalf of the signed-in user."
+      admin_consent_display_name = "Retrigger DLQ Messages"
+      enabled                    = true
+      id                         = random_uuid.oauth2_scope_retrigger_id.result
+      type                       = "User"
+      user_consent_description   = "Allow the application to retrigger dead letter queue messages on your behalf."
+      user_consent_display_name  = "Retrigger DLQ Messages"
+      value                      = "dlq.retrigger"
+    }
   }
 
   # Allow public clients (like Azure CLI) to authenticate
@@ -90,16 +92,16 @@ resource "azurerm_container_app_environment" "this" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
 }
 
-resource "azurerm_container_app" "auth" {
-  name                         = "ca-dlqt-auth"
+resource "azurerm_container_app" "api" {
+  name                         = "ca-dlqt-api"
   container_app_environment_id = azurerm_container_app_environment.this.id
   resource_group_name          = azurerm_resource_group.this.name
   revision_mode                = "Single"
 
   template {
     container {
-      name   = "auth"
-      image  = "ghcr.io/emerconn/dlqt/auth:latest"
+      name   = "api"
+      image  = "ghcr.io/emerconn/dlqt/api:latest"
       cpu    = 0.25
       memory = "0.5Gi"
     }
@@ -128,5 +130,5 @@ resource "azurerm_container_app" "auth" {
 resource "azurerm_role_assignment" "this" {
   scope                = azurerm_servicebus_namespace.this.id
   role_definition_name = "Azure Service Bus Data Owner"
-  principal_id         = azurerm_container_app.auth.identity[0].principal_id
+  principal_id         = azurerm_container_app.api.identity[0].principal_id
 }

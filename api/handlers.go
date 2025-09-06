@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (a *AuthService) handleCheckAuth(w http.ResponseWriter, r *http.Request) {
+func (a *APIService) handleCheckAuth(w http.ResponseWriter, r *http.Request) {
 	// If we reach here, user is already authenticated and authorized
 	userID := r.Context().Value("userID").(string)
 
@@ -16,7 +16,7 @@ func (a *AuthService) handleCheckAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// User is authorized for anything since they have the ServiceBus.DLQRetrigger role
+	// User is authorized for anything since they have the required scopes (dlq.fetch or dlq.retrigger)
 	response := map[string]any{
 		"authorized": true,
 		"userID":     userID,
