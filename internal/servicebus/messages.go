@@ -82,3 +82,59 @@ func DeadLetterMessages(ctx context.Context, client *azservicebus.Client, queue 
 	log.Printf("dead-lettered %d messages", receivedMessages)
 	return nil
 }
+
+func RetriggerDeadLetterMessage(ctx context.Context, client *azservicebus.Client, queue string, messageID string) error {
+	// Create receiver for dead-letter queue
+	options := &azservicebus.ReceiverOptions{
+		SubQueue: azservicebus.SubQueueDeadLetter,
+	}
+	receiver, err := client.NewReceiverForQueue(queue, options)
+	if err != nil {
+		return fmt.Errorf("failed to create DLQ receiver for queue '%s': %w", queue, err)
+	}
+	defer receiver.Close(ctx)
+
+	// Create sender for main queue
+	sender, err := client.NewSender(queue, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create sender for queue '%s': %w", queue, err)
+	}
+	defer sender.Close(ctx)
+
+	// Receive the specific message from DLQ
+	messages, err := receiver.ReceiveMessages(ctx, 1, nil)
+	if err != nil {
+		return fmt.Errorf("failed to receive messages from DLQ: %w", err)
+	}
+
+	if len(messages) == 0 {
+		return fmt.Errorf("no messages found in DLQ for queue '%s'", queue)
+	}
+
+	message := messages[0]
+	if message.MessageID != messageID {
+		// If not the right message, complete it without processing
+		receiver.CompleteMessage(ctx, message, nil)
+		return fmt.Errorf("message ID '%s' not found", messageID)
+	}
+
+	// Create new message with same body but reset properties
+	newMessage := &azservicebus.Message{
+		Body: message.Body,
+	}
+
+	// Send to main queue
+	err = sender.SendMessage(ctx, newMessage, nil)
+	if err != nil {
+		return fmt.Errorf("failed to send retriggered message: %w", err)
+	}
+
+	// Complete the original DLQ message
+	err = receiver.CompleteMessage(ctx, message, nil)
+	if err != nil {
+		return fmt.Errorf("failed to complete DLQ message: %w", err)
+	}
+
+	log.Printf("Successfully retriggered message %s from DLQ to main queue", messageID)
+	return nil
+}

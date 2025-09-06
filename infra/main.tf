@@ -11,6 +11,59 @@ resource "azurerm_servicebus_namespace" "this" {
 }
 
 resource "azurerm_servicebus_queue" "this" {
-  name         = "queue1"
+  name         = "sbq-dlqt-1"
   namespace_id = azurerm_servicebus_namespace.this.id
+}
+
+# Container App Environment
+resource "azurerm_container_app_environment" "this" {
+  name                = "cae-dlqt"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+# Auth Service Container App
+resource "azurerm_container_app" "auth_service" {
+  name                         = "ca-dlqt-auth"
+  container_app_environment_id = azurerm_container_app_environment.this.id
+  resource_group_name          = azurerm_resource_group.this.name
+  revision_mode                = "Single"
+
+  template {
+    container {
+      name   = "authservice"
+      image  = "dlqt/authservice:latest"
+      cpu    = 0.25
+      memory = "0.5Gi"
+
+      env {
+        name  = "AZURE_SERVICEBUS_NAMESPACE"
+        value = azurerm_servicebus_namespace.this.name
+      }
+
+      env {
+        name  = "AZURE_APP_OBJECT_ID"
+        value = "your-app-object-id" # Replace with actual app registration object ID
+      }
+    }
+  }
+
+  ingress {
+    external_enabled = true
+    target_port      = 8080
+    traffic_weight {
+      percentage = 100
+    }
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+# RBAC for Service Bus
+resource "azurerm_role_assignment" "auth_service_sb" {
+  scope                = azurerm_servicebus_namespace.this.id
+  role_definition_name = "Azure Service Bus Data Owner"
+  principal_id         = azurerm_container_app.auth_service.identity[0].principal_id
 }
