@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        cli: [ dlqt, dlqtools ]
         goos: [ linux, windows, darwin ]
         goarch: [ amd64, arm64 ]
 
@@ -42,16 +43,16 @@ jobs:
 
     - name: Build
       run: |
-        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dlqtools-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/dlqtools
+        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o ${{ matrix.cli }}-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/${{ matrix.cli }}
         if [ "${{ matrix.goos }}" = "windows" ]; then
-          mv dlqtools-${{ matrix.goos }}-${{ matrix.goarch }} dlqtools-${{ matrix.goos }}-${{ matrix.goarch }}.exe
+          mv ${{ matrix.cli }}-${{ matrix.goos }}-${{ matrix.goarch }} ${{ matrix.cli }}-${{ matrix.goos }}-${{ matrix.goarch }}.exe
         fi
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: dlqtools-${{ matrix.goos }}-${{ matrix.goarch }}
-        path: dlqtools-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
+        name: ${{ matrix.cli }}-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: ${{ matrix.cli }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
 
   release:
     runs-on: ubuntu-latest
