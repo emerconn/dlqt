@@ -59,18 +59,10 @@ func main() {
 		},
 		Commands: []*cli.Command{
 			{
-				Name:  "retrigger",
-				Usage: "Retrigger a message from the dead-letter queue",
+				Name:  "check-auth",
+				Usage: "Check if user is authorized to access a Service Bus namespace and queue",
 				Action: func(ctx context.Context, c *cli.Command) error {
-					return retriggerMessage(ctx, c)
-				},
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "message-id",
-						Aliases:  []string{"id"},
-						Usage:    "the message ID to retrigger",
-						Required: true,
-					},
+					return checkAuth(ctx, c)
 				},
 			},
 		},

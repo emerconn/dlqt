@@ -5,57 +5,28 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
-	"dlqt/internal/servicebus"
-
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 )
 
 type AuthService struct {
-	sbClient    *azservicebus.Client
-	appObjectID string
 }
 
-type RetriggerRequest struct {
+type CheckAuthRequest struct {
+	Namespace string `json:"namespace"`
 	Queue     string `json:"queue"`
-	MessageID string `json:"messageId"`
 }
 
 func main() {
-	// Load configuration from environment
-	namespace := os.Getenv("AZURE_SERVICEBUS_NAMESPACE")
-	appObjectID := os.Getenv("AZURE_APP_OBJECT_ID")
-
-	if namespace == "" {
-		log.Fatal("AZURE_SERVICEBUS_NAMESPACE must be set")
-	}
-
-	// Create Azure credentials for Service Bus (managed identity)
-	sbCred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		log.Fatalf("Failed to create Service Bus credential: %v", err)
-	}
-
-	sbClient, err := azservicebus.NewClient(namespace, sbCred, nil)
-	if err != nil {
-		log.Fatalf("Failed to create Service Bus client: %v", err)
-	}
-
-	authService := &AuthService{
-		sbClient:    sbClient,
-		appObjectID: appObjectID,
-	}
+	authService := &AuthService{}
 
 	// Setup HTTP server
 	r := mux.NewRouter()
 	r.Use(authMiddleware)
 
-	r.HandleFunc("/retrigger", authService.handleRetrigger).Methods("POST")
+	r.HandleFunc("/check-auth", authService.handleCheckAuth).Methods("POST")
 
 	log.Println("Starting auth service on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
@@ -100,35 +71,48 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (a *AuthService) handleRetrigger(w http.ResponseWriter, r *http.Request) {
+func (a *AuthService) handleCheckAuth(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 
-	// TODO: Check if user is authorized (e.g., member of specific group or app role)
-	// For now, accept any valid Azure AD user
-	log.Printf("User %s authorized for retrigger", userID)
-
 	// Parse request
-	var req RetriggerRequest
+	var req CheckAuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// Retrigger the message
-	err := servicebus.RetriggerDeadLetterMessage(r.Context(), a.sbClient, req.Queue, req.MessageID)
+	// Check if user is authorized for this namespace and queue
+	authorized, err := a.checkUserAuthorization(userID, req.Namespace, req.Queue)
 	if err != nil {
-		log.Printf("Failed to retrigger message: %v", err)
-		http.Error(w, "Failed to retrigger message", http.StatusInternalServerError)
+		log.Printf("Failed to check authorization for user %s: %v", userID, err)
+		http.Error(w, "Failed to check authorization", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	log.Printf("User %s authorization check for namespace '%s', queue '%s': %t",
+		userID, req.Namespace, req.Queue, authorized)
+
+	response := map[string]any{
+		"authorized": authorized,
+		"userID":     userID,
+		"namespace":  req.Namespace,
+		"queue":      req.Queue,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if authorized {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusForbidden)
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
-func (a *AuthService) checkUserAuthorization(userID string) (bool, error) {
+func (a *AuthService) checkUserAuthorization(userID, namespace, queue string) (bool, error) {
 	// TODO: Implement proper authorization check
 	// This could check if user is in a specific Azure AD group
 	// or has a specific app role assignment
+	// For now, we'll just return true for any valid Azure AD user
+	log.Printf("Checking authorization for user %s on namespace %s, queue %s", userID, namespace, queue)
 	return true, nil
 }
