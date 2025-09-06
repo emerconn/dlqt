@@ -2,9 +2,13 @@ package main
 
 type APIService struct{}
 
-type CheckAuthRequest struct {
-	Namespace string `json:"namespace"`
-	Queue     string `json:"queue"`
+type AuthError struct {
+	Code    int
+	Message string
+}
+
+func (e *AuthError) Error() string {
+	return e.Message
 }
 
 type JWK struct {

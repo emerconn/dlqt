@@ -9,7 +9,7 @@ import (
 )
 
 // main is the entry point of the API service
-// It sets up the HTTP server, middleware, and routing for the API service
+// It sets up the HTTP server and routing for the API service
 func main() {
 	// Service startup logging with timestamp for debugging deployment issues
 	log.Println("=== Starting DLQT API Service ===")
@@ -24,20 +24,19 @@ func main() {
 	log.Println("Setting up HTTP router...")
 	r := mux.NewRouter()
 
-	// Add authentication middleware to ALL routes
-	// This middleware runs before any handler and validates JWT tokens
-	log.Println("Adding auth middleware...")
-	r.Use(authMiddleware)
+	// Register trigger endpoint - requires dlq.retrigger scope
+	log.Println("Registering /trigger endpoint...")
+	r.HandleFunc("/trigger", apiService.handleTrigger).Methods("POST")
 
-	// Register our main endpoint for checking authorization
-	// Only POST requests to /check-auth will be handled by this route
-	log.Println("Registering /check-auth endpoint...")
-	r.HandleFunc("/check-auth", apiService.handleCheckAuth).Methods("POST")
+	// Register fetch endpoint - requires dlq.fetch scope
+	log.Println("Registering /fetch endpoint...")
+	r.HandleFunc("/fetch", apiService.handleFetch).Methods("GET")
 
 	// Log the service configuration for operational visibility
 	log.Println("=== API service configuration complete ===")
 	log.Println("Available endpoints:")
-	log.Println("  POST /check-auth - Check user authorization for namespace/queue")
+	log.Println("  POST /trigger - Trigger operations (requires dlq.retrigger scope)")
+	log.Println("  GET /fetch - Fetch operations (requires dlq.fetch scope)")
 
 	// Start the HTTP server on port 8080
 	// log.Fatal will terminate the program if the server fails to start
