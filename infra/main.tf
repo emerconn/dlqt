@@ -23,14 +23,6 @@ resource "azurerm_servicebus_queue" "this" {
   namespace_id = azurerm_servicebus_namespace.this.id
 }
 
-resource "azurerm_container_registry" "this" {
-  name                = "acrdlqt"
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Basic"
-  admin_enabled       = true
-}
-
 resource "azurerm_container_app_environment" "this" {
   name                = "cae-dlqt"
   location            = azurerm_resource_group.this.location
@@ -49,7 +41,7 @@ resource "azurerm_container_app" "auth" {
   template {
     container {
       name   = "auth"
-      image  = "ghcr.io/emerconn/dlqt/auth:sha-ac34fbf"
+      image  = "ghcr.io/emerconn/dlqt/auth:latest"
       cpu    = 0.25
       memory = "0.5Gi"
     }
@@ -66,6 +58,12 @@ resource "azurerm_container_app" "auth" {
 
   identity {
     type = "SystemAssigned"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image,
+    ]
   }
 }
 
