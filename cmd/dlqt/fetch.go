@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"dlqt/internal/servicebus"
+
 	"github.com/urfave/cli/v3"
 )
 
@@ -36,7 +37,7 @@ func fetch(ctx context.Context, c *cli.Command) error {
 
 	// Output the message details as JSON
 	messageDetails := map[string]interface{}{
-		"messageID":      message.MessageID,
+		"messageID":     message.MessageID,
 		"body":          string(message.Body),
 		"enqueuedTime":  message.EnqueuedTime,
 		"deliveryCount": message.DeliveryCount,
@@ -50,6 +51,6 @@ func fetch(ctx context.Context, c *cli.Command) error {
 
 	fmt.Println(string(jsonOutput))
 	log.Printf("Successfully fetched message: %s", message.MessageID)
-	
+
 	return nil
 }

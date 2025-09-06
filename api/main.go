@@ -8,15 +8,6 @@ import (
 	"github.com/gorilla/mux" // HTTP router for handling different endpoints
 )
 
-// Helper function for finding the minimum of two integers
-// Used when safely truncating strings to avoid index out of bounds errors
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // main is the entry point of the API service
 // It sets up the HTTP server, middleware, and routing for the API service
 func main() {
