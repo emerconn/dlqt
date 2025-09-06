@@ -24,7 +24,7 @@ permissions:
   id-token: write
 
 jobs:
-  infra:
+  plan:
     runs-on: ubuntu-latest
 
     steps:
@@ -114,7 +114,35 @@ jobs:
             body: output
           })
 
+  apply:
+    runs-on: ubuntu-latest
+    needs: plan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Azure Login
+      uses: Azure/login@v2
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    - uses: opentofu/setup-opentofu@v1
+
+    - name: OpenTofu Init
+      run: tofu init
+      env:
+        ARM_USE_OIDC: true
+        ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+        ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
     - name: Tofu Apply
-      id: apply
-      if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
       run: tofu apply -auto-approve -input=false
+      env:
+        ARM_USE_OIDC: true
+        ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+        ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
