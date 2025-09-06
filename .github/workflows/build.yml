@@ -38,8 +38,25 @@ jobs:
           mv dlqtools-${{ matrix.goos }}-${{ matrix.goarch }} dlqtools-${{ matrix.goos }}-${{ matrix.goarch }}.exe
         fi
 
-    - name: Upload binary to release
-      if: github.event_name == 'release'
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dlqtools-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: dlqtools-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'release'
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Upload binaries to release
       uses: softprops/action-gh-release@v2
       with:
-        files: dlqtools-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
+        files: artifacts/**/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
