@@ -76,9 +76,9 @@ The system consists of:
 1. Deploy infrastructure:
 ```bash
 cd infra
-terraform init
-terraform plan
-terraform apply
+tofu init
+tofu plan
+tofu apply
 ```
 
 2. Build and push the auth service container:
