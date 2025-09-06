@@ -30,20 +30,31 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
-    - name: Log in to GitHub Container Registry
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/auth
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha
+
+    - name: Login to GHCR
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push Docker image
+    - name: Build and push
       uses: docker/build-push-action@v6
       with:
         context: .
         file: ./auth/Dockerfile
         push: true
-        tags: |
-          ghcr.io/${{ github.repository }}/auth:${{ github.sha }}
-          ghcr.io/${{ github.repository }}/auth:${{ github.ref_name }}
-          ${{ github.event.release.latest && format('ghcr.io/{0}/auth:latest', github.repository) || '' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
