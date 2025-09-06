@@ -42,7 +42,7 @@ jobs:
 
     - name: Build
       run: |
-        GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dlqtools-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/dlqtools
+        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dlqtools-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/dlqtools
         if [ "${{ matrix.goos }}" = "windows" ]; then
           mv dlqtools-${{ matrix.goos }}-${{ matrix.goarch }} dlqtools-${{ matrix.goos }}-${{ matrix.goarch }}.exe
         fi
