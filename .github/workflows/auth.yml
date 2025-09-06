@@ -46,5 +46,4 @@ jobs:
         tags: |
           ghcr.io/${{ github.repository }}/auth:${{ github.sha }}
           ghcr.io/${{ github.repository }}/auth:${{ github.ref_name }}
-          ${{ github.event_name == 'release' && format('ghcr.io/{0}/auth:{1}', github.repository, github.ref_name) || '' }}
-          ${{ github.event_name == 'release' && github.event.release.latest && format('ghcr.io/{0}/auth:latest', github.repository) || '' }}
+          ${{ github.event.release.latest && format('ghcr.io/{0}/auth:latest', github.repository) || '' }}
