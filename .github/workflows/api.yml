@@ -1,22 +1,22 @@
-name: Auth
+name: API
 
 on:
   push:
     branches: [ '*' ]
     paths:
-    - 'auth/**'
+    - 'api/**'
     - 'internal/**'
     - 'go.mod'
     - 'go.sum'
-    - '.github/workflows/auth.yml'
+    - '.github/workflows/api.yml'
   pull_request:
     branches: [ '*' ]
     paths:
-    - 'auth/**'
+    - 'api/**'
     - 'internal/**'
     - 'go.mod'
     - 'go.sum'
-    - '.github/workflows/auth.yml'
+    - '.github/workflows/api.yml'
   release:
     types: [ created ]
 
@@ -35,7 +35,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/auth
+        images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/api
         tags: |
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
@@ -55,7 +55,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./auth/Dockerfile
+        file: ./api/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -85,5 +85,5 @@ jobs:
       uses: azure/container-apps-deploy-action@v2
       with:
         imageToDeploy: ${{ steps.sha-tag.outputs.tag }}
-        containerAppName: ca-dlqt-auth
+        containerAppName: ca-dlqt-api
         resourceGroup: rg-dlqt
