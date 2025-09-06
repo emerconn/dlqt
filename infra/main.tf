@@ -19,6 +19,7 @@ resource "azurerm_container_app_environment" "this" {
   name                = "cae-dlqt"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  logs_destination    = "azure-monitor"
 }
 
 resource "azurerm_container_app" "auth" {
