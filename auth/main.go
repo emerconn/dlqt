@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/rsa"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"strings"
 	"time"
@@ -26,6 +29,20 @@ type CheckAuthRequest struct {
 	Queue     string `json:"queue"`     // The specific queue within that namespace
 }
 
+// JWK represents a JSON Web Key from Microsoft's key endpoint
+type JWK struct {
+	Kty string `json:"kty"` // Key type
+	Use string `json:"use"` // Key usage
+	Kid string `json:"kid"` // Key ID
+	N   string `json:"n"`   // RSA modulus
+	E   string `json:"e"`   // RSA exponent
+}
+
+// JWKSet represents the response from Microsoft's JWKS endpoint
+type JWKSet struct {
+	Keys []JWK `json:"keys"`
+}
+
 // Helper function for finding the minimum of two integers
 // Used when safely truncating strings to avoid index out of bounds errors
 func min(a, b int) int {
@@ -33,6 +50,73 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// fetchMicrosoftJWKS fetches the public keys from Microsoft's JWKS endpoint
+func fetchMicrosoftJWKS() (*JWKSet, error) {
+	resp, err := http.Get("https://login.microsoftonline.com/common/discovery/v2.0/keys")
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch JWKS: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var jwks JWKSet
+	if err := json.NewDecoder(resp.Body).Decode(&jwks); err != nil {
+		return nil, fmt.Errorf("failed to decode JWKS: %w", err)
+	}
+
+	return &jwks, nil
+}
+
+// jwkToRSAPublicKey converts a JWK to an RSA public key
+func jwkToRSAPublicKey(jwk JWK) (*rsa.PublicKey, error) {
+	// Decode the modulus (n) from base64url
+	nBytes, err := base64.RawURLEncoding.DecodeString(jwk.N)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode modulus: %w", err)
+	}
+
+	// Decode the exponent (e) from base64url
+	eBytes, err := base64.RawURLEncoding.DecodeString(jwk.E)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode exponent: %w", err)
+	}
+
+	// Convert bytes to big integers
+	n := new(big.Int).SetBytes(nBytes)
+	e := new(big.Int).SetBytes(eBytes)
+
+	// Create RSA public key
+	publicKey := &rsa.PublicKey{
+		N: n,
+		E: int(e.Int64()),
+	}
+
+	return publicKey, nil
+}
+
+// getPublicKeyForToken fetches the appropriate public key for validating a JWT token
+func getPublicKeyForToken(token *jwt.Token) (interface{}, error) {
+	// Get the key ID from the token header
+	kid, ok := token.Header["kid"].(string)
+	if !ok {
+		return nil, fmt.Errorf("token does not have a key ID (kid)")
+	}
+
+	// Fetch Microsoft's public keys
+	jwks, err := fetchMicrosoftJWKS()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch Microsoft JWKS: %w", err)
+	}
+
+	// Find the key with matching kid
+	for _, jwk := range jwks.Keys {
+		if jwk.Kid == kid {
+			return jwkToRSAPublicKey(jwk)
+		}
+	}
+
+	return nil, fmt.Errorf("no key found with kid: %s", kid)
 }
 
 // main is the entry point of the authentication service
@@ -133,14 +217,16 @@ func authMiddleware(next http.Handler) http.Handler {
 			log.Printf("JWT parsing callback called")
 			log.Printf("Token algorithm: %v", token.Header["alg"]) // Shows signing algorithm (RS256, HS256, etc.)
 			log.Printf("Token type: %v", token.Header["typ"])      // Should be "JWT"
+			log.Printf("Token key ID: %v", token.Header["kid"])    // Microsoft's key identifier
 
-			// ⚠️ SECURITY WARNING: This is using a hardcoded secret for validation
-			// In production with Azure AD, you need to:
-			// 1. Fetch Microsoft's public keys from https://login.microsoftonline.com/common/discovery/keys
-			// 2. Validate the token was signed by Microsoft using those keys
-			// 3. Validate audience, issuer, and expiration claims
-			log.Println("WARNING: Using hardcoded secret for token validation - THIS IS NOT SECURE FOR PRODUCTION")
-			return []byte("secret"), nil
+			// Validate that the token is using RSA256 algorithm
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+
+			// Fetch the appropriate public key from Microsoft
+			log.Println("Fetching Microsoft's public key for token validation...")
+			return getPublicKeyForToken(token)
 		})
 
 		// Check if token parsing failed
