@@ -8,7 +8,6 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  id-token: write
 
 defaults:
   run:
@@ -74,9 +73,7 @@ jobs:
     - uses: actions/github-script@v6
       if: github.event_name == 'pull_request'
       env:
-        PLAN: "tofu
-
-          ${{ steps.plan.outputs.stdout }}"
+        PLAN: "tofu\n${{ steps.plan.outputs.stdout }}"
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
@@ -109,3 +106,8 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
+
+    - name: Tofu Apply
+      id: apply
+      if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
+      run: tofu apply -auto-approve -input=false
