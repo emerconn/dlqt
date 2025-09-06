@@ -105,8 +105,10 @@ func getAzureADToken() (string, error) {
 		return "", fmt.Errorf("failed to create credential: %w", err)
 	}
 
+	// Request token using the app client ID as scope (will be output from Terraform)
+	// TODO: Replace with actual client ID from Terraform output
 	token, err := cred.GetToken(context.Background(), policy.TokenRequestOptions{
-		Scopes: []string{"https://graph.microsoft.com/.default"},
+		Scopes: []string{"795ab387-3200-4ae3-81e3-a096b787e155/.default"}, // This will be replaced with actual ID
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to get token: %w", err)

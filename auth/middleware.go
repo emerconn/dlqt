@@ -45,19 +45,21 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Check app audience (your app registration)
-		if aud, ok := claims["aud"].(string); !ok || aud != "dlqt" {
-			log.Printf("Wrong audience: %v", claims["aud"])
+		// Check app audience (should be our app's client ID)
+		expectedAudience := "795ab387-3200-4ae3-81e3-a096b787e155"
+		if aud, ok := claims["aud"].(string); !ok || aud != expectedAudience {
+			log.Printf("Wrong audience: got %v, expected %s", claims["aud"], expectedAudience)
 			http.Error(w, "Token not for this application", http.StatusForbidden)
 			return
 		}
 
-		// Check for required role
+		// Check for required app role
 		hasRole := false
 		if roles, ok := claims["roles"].([]interface{}); ok {
 			for _, role := range roles {
 				if roleStr, ok := role.(string); ok && roleStr == "ServiceBus.DLQRetrigger" {
 					hasRole = true
+					log.Printf("User has required role: %s", roleStr)
 					break
 				}
 			}
@@ -65,7 +67,8 @@ func authMiddleware(next http.Handler) http.Handler {
 
 		if !hasRole {
 			log.Printf("User missing required role: ServiceBus.DLQRetrigger")
-			http.Error(w, "Insufficient permissions", http.StatusForbidden)
+			log.Printf("Available roles: %v", claims["roles"])
+			http.Error(w, "Insufficient permissions - missing ServiceBus.DLQRetrigger role", http.StatusForbidden)
 			return
 		}
 
