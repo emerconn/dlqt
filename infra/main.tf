@@ -34,16 +34,6 @@ resource "azurerm_container_app" "auth" {
       image  = "ghcr.io/emerconn/dlqt/auth:main"
       cpu    = 0.25
       memory = "0.5Gi"
-
-      env {
-        name  = "AZURE_SERVICEBUS_NAMESPACE"
-        value = azurerm_servicebus_namespace.this.name
-      }
-
-      env {
-        name  = "AZURE_APP_OBJECT_ID"
-        value = "your-app-object-id" # Replace with actual app registration object ID
-      }
     }
   }
 
