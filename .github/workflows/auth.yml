@@ -71,7 +71,6 @@ jobs:
     - name: Extract SHA tag
       id: sha-tag
       run: |
-        # Extract the SHA tag from the metadata tags
         SHA_TAG=$(echo '${{ needs.build.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
         echo "tag=${SHA_TAG}" >> $GITHUB_OUTPUT
 
