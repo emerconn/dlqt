@@ -17,7 +17,7 @@ A really cool Go CLI tool for interacting with Azure Service Bus queues
 - has direct access to Service Bus for admin operations
 - run `dlqtools -h` for usage information
 
-### `authservice`
+### `auth`
 
 - HTTP API service for authenticated DLQ message retriggering
 - runs in Azure Container Apps with managed identity
@@ -29,11 +29,11 @@ A really cool Go CLI tool for interacting with Azure Service Bus queues
 The system consists of:
 1. `dlqt` - Developer CLI tool for secure message retriggering
 2. `dlqtools` - Admin CLI tool with direct Service Bus access
-3. `authservice` - Containerized API service for secure message retriggering
+3. `auth` - Containerized API service for secure message retriggering
 4. Azure Service Bus with RBAC for the auth service
  
 **Developer Workflow:**
-- Developers use `dlqt retrigger` which calls the `authservice` API with their Azure AD token
+- Developers use `dlqt retrigger` which calls the `auth` API with their Azure AD token
 - The auth service validates the token and performs the retrigger operation using its managed identity
 - Developers cannot modify message contents, only retrigger
  
@@ -78,11 +78,11 @@ CGO_ENABLED=0 go build -ldflags="-s -w" ./cmd/dlqtools
 upx --best --lzma ./dlqtools
 ```
 
-### `authservice`
+### `auth`
 
 ```bash
-cd authservice
-docker build -t dlqt/authservice .
+cd auth
+docker build -t dlqt/auth .
 ```
 
 ## Deployment
@@ -97,10 +97,10 @@ terraform apply
 
 2. Build and push the auth service container:
 ```bash
-cd authservice
-docker build -t dlqt/authservice .
-docker tag dlqt/authservice <your-registry>/dlqt/authservice:latest
-docker push <your-registry>/dlqt/authservice:latest
+cd auth
+docker build -t dlqt/auth .
+docker tag dlqt/auth <your-registry>/dlqt/auth:latest
+docker push <your-registry>/dlqt/auth:latest
 ```
 
 3. Update the container app image in Terraform and redeploy

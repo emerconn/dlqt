@@ -29,8 +29,8 @@ resource "azurerm_container_app" "this" {
 
   template {
     container {
-      name   = "authservice"
-      image  = "dlqt/authservice:latest"
+      name   = "auth"
+      image  = "dlqt/auth:latest"
       cpu    = 0.25
       memory = "0.5Gi"
 
