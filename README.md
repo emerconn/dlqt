@@ -1,21 +1,20 @@
 # dlqt
  
-A really cool Go CLI tool for interacting with Azure Service Bus queues
+Tool suite for interacting with Azure Service Bus DLQ 
  
 ## Usage
  
 ### `dlqt`
  
-- developer tool for re-submitting dead-letter messages
-- uses auth service for secure retriggering
-- run `dlqt -h` for usage information
- 
+- Developer oriented, for retriggering DLQ messages
+- uses `az login` for reading (requires Service Bus Data Reader role) and [auth](#auth) for retriggering
+- run `dlqt -h` for usage info
+
 ### `dlqtools`
- 
-- admin tool for managing queues and dead-letter queues
-- uses `az login` for authentication
-- has direct access to Service Bus for admin operations
-- run `dlqtools -h` for usage information
+
+- Admin oriented, for managing/testing DLQ messages
+- uses `az login` for auth (requires Service Bus Data Owner role)
+- run `dlqtools -h` for usage info
 
 ### `auth`
 
@@ -45,45 +44,32 @@ The system consists of:
  
 ### `dlqt`
  
-local dev
-```bash
-go install ./cmd/dlqt && source <(dlqt completion zsh)
-which dlqt
-dlqt -h
-```
- 
-shipping
-```bash
-CGO_ENABLED=0 go build -ldflags="-s -w" ./cmd/dlqt
-```
- 
+- local
+  ```bash
+  go install ./cmd/dlqt && source <(dlqt completion zsh)
+  which dlqt
+  dlqt -h
+  ```
+- shipped (see GitHub)
+
 ### `dlqtools`
- 
-local dev
-```bash
-go install ./cmd/dlqtools && source <(dlqtools completion zsh)
-which dlqtools
-dlqtools -h
-```
- 
-shipping
-```bash
-# env var & flags reduces binary size
-# execution time 0.005s, size 16MB
-CGO_ENABLED=0 go build -ldflags="-s -w" ./cmd/dlqtools
- 
-# compresses binary but increases execution time
-# good for container images, not so much for CLI binaries
-# execution time 0.225s, size 3.3MB
-upx --best --lzma ./dlqtools
-```
+
+- local
+  ```bash
+  go install ./cmd/dlqtools && source <(dlqtools completion zsh)
+  which dlqtools
+  dlqtools -h
+  ```
+- shipped (see GitHub)
 
 ### `auth`
 
-```bash
-cd auth
-docker build -t dlqt/auth .
-```
+- local 
+  ```bash
+  cd auth
+  docker build -t dlqt/auth .
+  ```
+- shipped (see GitHub)
 
 ## Deployment
 
@@ -109,9 +95,9 @@ docker push <your-registry>/dlqt/auth:latest
  
 ### `dlqt`
  
-- auth API integration completed ✅
-- add more developer-friendly features
- 
+- [ ] auth API, used Azure AD groups and something idk?
+- [ ] add more developer-friendly features
+
 ### `dlqtools`
- 
-- purge dead-letter queue
+
+- [x] DLQ purge command
