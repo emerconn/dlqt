@@ -3,6 +3,14 @@ resource "azurerm_resource_group" "this" {
   location = "centralus"
 }
 
+resource "azurerm_log_analytics_workspace" "this" {
+  name                = "law-dlqt"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
 resource "azurerm_servicebus_namespace" "this" {
   name                = "sb-dlqt"
   location            = azurerm_resource_group.this.location
@@ -15,12 +23,12 @@ resource "azurerm_servicebus_queue" "this" {
   namespace_id = azurerm_servicebus_namespace.this.id
 }
 
-resource "azurerm_log_analytics_workspace" "this" {
-  name                = "law-dlqt"
+resource "azurerm_container_registry" "this" {
+  name                = "acrdlqt"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
+  sku                 = "Basic"
+  admin_enabled       = true
 }
 
 resource "azurerm_container_app_environment" "this" {
@@ -41,7 +49,7 @@ resource "azurerm_container_app" "auth" {
   template {
     container {
       name   = "auth"
-      image  = "ghcr.io/emerconn/dlqt/auth:main"
+      image  = "ghcr.io/emerconn/dlqt/auth:sha-ac34fbf"
       cpu    = 0.25
       memory = "0.5Gi"
     }
