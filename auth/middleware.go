@@ -75,12 +75,19 @@ func authMiddleware(next http.Handler) http.Handler {
 
 			// Validate that the token is using RSA256 algorithm
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				log.Printf("ERROR: Unexpected signing method: %v", token.Header["alg"])
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 
 			// Fetch the appropriate public key from Microsoft
 			log.Println("Fetching Microsoft's public key for token validation...")
-			return getPublicKeyForToken(token)
+			key, err := getPublicKeyForToken(token)
+			if err != nil {
+				log.Printf("ERROR: Failed to get public key: %v", err)
+				return nil, err
+			}
+			log.Println("Successfully retrieved public key")
+			return key, nil
 		})
 
 		// Check if token parsing failed
