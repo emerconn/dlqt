@@ -9,6 +9,14 @@ on:
     - 'go.mod'
     - 'go.sum'
     - '.github/workflows/build.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+    - 'cmd/dlqtools/**'
+    - 'internal/**'
+    - 'go.mod'
+    - 'go.sum'
+    - '.github/workflows/build.yml'
   release:
     types: [ created ]
 
