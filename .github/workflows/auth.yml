@@ -20,6 +20,10 @@ on:
   release:
     types: [ created ]
 
+defaults:
+  run:
+    working-directory: auth
+
 permissions:
   contents: read
   packages: write
