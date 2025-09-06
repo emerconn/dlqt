@@ -20,12 +20,7 @@ on:
   release:
     types: [ created ]
 
-defaults:
-  run:
-    working-directory: auth
-
 permissions:
-  contents: read
   packages: write
 
 jobs:
@@ -45,7 +40,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
       with:
-        context: .
+        context: ./auth
         push: true
         tags: |
           ghcr.io/${{ github.repository }}/auth:${{ github.sha }}
