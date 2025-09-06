@@ -3,6 +3,12 @@ name: Build and Release dlqtools
 on:
   push:
     branches: [ main ]
+    paths:
+    - 'cmd/dlqtools/**'
+    - 'internal/**'
+    - 'go.mod'
+    - 'go.sum'
+    - '.github/workflows/build.yml'
   release:
     types: [ created ]
 
