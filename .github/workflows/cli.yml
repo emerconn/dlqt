@@ -2,7 +2,7 @@ name: CLI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '*' ]
     paths:
     - 'cmd/dlqtools/**'
     - 'internal/**'
@@ -10,7 +10,7 @@ on:
     - 'go.sum'
     - '.github/workflows/cli.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ '*' ]
     paths:
     - 'cmd/dlqtools/**'
     - 'internal/**'
