@@ -11,10 +11,9 @@ A really cool Go CLI tool for interacting with Azure Service Bus queues
 ### `dlqtools`
  
 - admin tool for managing queues and dead-letter queues
-- requires "Azure Service Bus Data Sender" PIM role
 - uses `az login` for authentication
 - run `dlqtools -h` for usage information
- 
+
 ## Build
  
 ### `dlqt`
