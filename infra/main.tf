@@ -31,7 +31,7 @@ resource "azurerm_container_app" "auth" {
   template {
     container {
       name   = "auth"
-      image  = "ghcr.io/emerconn/dlqt/auth:latest"
+      image  = "ghcr.io/emerconn/dlqt/auth:main"
       cpu    = 0.25
       memory = "0.5Gi"
 
