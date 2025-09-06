@@ -15,11 +15,21 @@ resource "azurerm_servicebus_queue" "this" {
   namespace_id = azurerm_servicebus_namespace.this.id
 }
 
+resource "azurerm_log_analytics_workspace" "this" {
+  name                = "law-dlqt"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
 resource "azurerm_container_app_environment" "this" {
   name                = "cae-dlqt"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
-  logs_destination    = "azure-monitor"
+
+  logs_destination           = "log-analytics"
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
 }
 
 resource "azurerm_container_app" "auth" {
