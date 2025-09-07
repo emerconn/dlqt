@@ -18,14 +18,14 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 		CacheFile: "msal_cache.json",
 	}
 	apiConfig := msal.APIConfig{
-		APIEndpoint: cmd.String("api-url"),
+		APIEndpoint: cmd.String("api-url") + "/fetch",
 	}
 
 	token, err := msal.GetToken(ctx, &msalConfig)
 	if err != nil {
 		return fmt.Errorf("failed to get token: %w", err)
 	}
-	log.Printf("acquired token: %s\n", token)
+	log.Printf("token: %s\n", token)
 
 	if err := msal.SendTokenToAPI(token, &apiConfig); err != nil {
 		return fmt.Errorf("failed to send token to API: %w", err)
