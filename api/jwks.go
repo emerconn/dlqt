@@ -54,4 +54,3 @@ func decodeRSAPublicKey(n, e string) (*rsa.PublicKey, error) {
 		E: int(eInt.Int64()),
 	}, nil
 }
-
