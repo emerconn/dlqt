@@ -3,18 +3,26 @@ package main
 import (
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
+
+func fetchHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message": "fetch endpoint"}`))
+}
 
 func main() {
 	log.Println("starting DLQT API")
 
-	apiService := &APIService{}
-	r := mux.NewRouter()
+	http.HandleFunc("/fetch", fetchHandler)
 
-	r.HandleFunc("/trigger", apiService.handleTrigger).Methods("POST")
-	r.HandleFunc("/fetch", apiService.handleFetch).Methods("GET")
-
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Println("server starting on port 8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal("failed to start server:", err)
+	}
 }
