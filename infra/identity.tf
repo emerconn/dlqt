@@ -2,7 +2,9 @@ resource "random_uuid" "dlqt_api_scope_read_id" {}
 
 resource "random_uuid" "dlqt_api_scope_retrigger_id" {}
 
-# TODO: how to expose the default app ID URI? azapi?
+# TODO: how to expose the app ID URI? azapi? (did via portal)
+# TODO: how to add app ID URI to identifier URIs? (did via cli)
+# az ad app update --id 074c5ac1-4ab2-4a8a-b811-2d7b8c4e419f --identifier-uris api://074c5ac1-4ab2-4a8a-b811-2d7b8c4e419f
 resource "azuread_application" "dlqt_api" {
   display_name     = "dlqt-api"
   description      = "DLQT API"
