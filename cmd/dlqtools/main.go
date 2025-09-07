@@ -55,8 +55,8 @@ func main() {
 			{
 				Name:  "seed",
 				Usage: "Seed the dead-letter queue with test messages",
-				Action: func(ctx context.Context, c *cli.Command) error {
-					return seedMessages(ctx, c)
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return seedMessages(ctx, cmd)
 				},
 				MutuallyExclusiveFlags: []cli.MutuallyExclusiveFlags{
 					{
@@ -97,8 +97,8 @@ func main() {
 			{
 				Name:  "purge",
 				Usage: "Purge the queue and dead-letter queue of all messages",
-				Action: func(ctx context.Context, c *cli.Command) error {
-					return purgeMessages(ctx, c)
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return purgeMessages(ctx, cmd)
 				},
 				MutuallyExclusiveFlags: []cli.MutuallyExclusiveFlags{
 					{

@@ -10,10 +10,10 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func seedMessages(ctx context.Context, c *cli.Command) error {
-	namespace := c.String("namespace")
-	queue := c.String("queue")
-	numMessages := c.Int("num-messages")
+func seedMessages(ctx context.Context, cmd *cli.Command) error {
+	namespace := cmd.String("namespace")
+	queue := cmd.String("queue")
+	numMessages := cmd.Int("num-messages")
 
 	log.Println("namespace:", namespace)
 	log.Println("queue:", queue)
@@ -33,7 +33,7 @@ func seedMessages(ctx context.Context, c *cli.Command) error {
 		return fmt.Errorf("failed to send messages: %w", err)
 	}
 
-	if !c.Bool("no-dlq") {
+	if !cmd.Bool("no-dlq") {
 		log.Println("moving messages to dead-letter queue")
 		if err := servicebus.DeadLetterMessages(ctx, client, queue, len(messages)); err != nil {
 			return fmt.Errorf("failed to dead-letter messages: %w", err)
