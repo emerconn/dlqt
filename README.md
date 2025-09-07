@@ -1,6 +1,6 @@
 # dlqt
  
-Tool suite for interacting with Azure Service Bus DLQ 
+CLI tool suite for interacting with Azure Service Bus DLQ 
  
 ## Usage
  
