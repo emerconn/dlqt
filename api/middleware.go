@@ -45,8 +45,28 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// extract tenant from iss
+		iss, ok := parsedToken.Claims.(jwt.MapClaims)["iss"].(string)
+		if !ok {
+			http.Error(w, "Missing iss in token", http.StatusUnauthorized)
+			return
+		}
+		if !strings.HasPrefix(iss, "https://login.microsoftonline.com/") {
+			http.Error(w, "Invalid issuer", http.StatusUnauthorized)
+			return
+		}
+		parts := strings.Split(iss, "/")
+		if len(parts) < 4 {
+			http.Error(w, "Invalid issuer format", http.StatusUnauthorized)
+			return
+		}
+		tenantID := parts[3]
+
+		log.Printf("Token iss: %s, tenant: %s", iss, tenantID)
+		log.Printf("Token kid: %s", kid)
+
 		// fetch JWKS
-		jwks, err := getJWKS("f09f69e2-b684-4c08-9195-f8f10f54154c") // TODO: unhardcode this
+		jwks, err := getJWKS(tenantID) // use dynamic tenant
 		if err != nil {
 			http.Error(w, "Failed to fetch JWKS", http.StatusInternalServerError)
 			return
@@ -55,11 +75,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// find matching key
 		var publicKey *rsa.PublicKey
 		for _, key := range jwks.Keys {
+			log.Printf("JWKS key kid: %s, use: %s", key.Kid, key.Use)
 			if key.Kid == kid && key.Use == "sig" {
 				publicKey, err = decodeRSAPublicKey(key.N, key.E)
 				if err != nil {
-					break
+					log.Printf("Failed to decode key %s: %v", key.Kid, err)
+					continue
 				}
+				break
 			}
 		}
 		if publicKey == nil {
