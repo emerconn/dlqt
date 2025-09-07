@@ -13,9 +13,9 @@ import (
 
 func fetch(ctx context.Context, cmd *cli.Command) error {
 	msalConfig := msal.MSALConfig{
-		TenantID:  "f09f69e2-b684-4c08-9195-f8f10f54154c",
-		ClientID:  "e64205cb-fe54-4452-a6ab-7eec472bdfcc",
-		Scope:     "api://074c5ac1-4ab2-4a8a-b811-2d7b8c4e419f/dlq.read",
+		TenantID:  cmd.String("cmd-tenant-id"),
+		ClientID:  cmd.String("cmd-client-id"),
+		Scope:     "api://" + cmd.String("api-client-id") + "/dlq.read",
 		CacheFile: "msal_cache.json",
 	}
 	apiConfig := msal.APIConfig{

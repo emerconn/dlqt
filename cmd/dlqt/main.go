@@ -38,23 +38,38 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     "namespace",
-				Aliases:  []string{"n"},
 				Usage:    "the Service Bus namespace",
 				Sources:  cli.EnvVars("AZURE_SERVICEBUS_NAMESPACE"),
 				Required: true,
 			},
 			&cli.StringFlag{
 				Name:     "queue",
-				Aliases:  []string{"q"},
 				Usage:    "the Service Bus queue name",
 				Sources:  cli.EnvVars("AZURE_SERVICEBUS_QUEUE"),
 				Required: true,
 			},
 			&cli.StringFlag{
 				Name:     "api-url",
-				Aliases:  []string{"u"},
 				Usage:    "the API service URL",
-				Sources:  cli.EnvVars("DLQT_API_URL"),
+				Sources:  cli.EnvVars("API_URL"),
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "api-client-id",
+				Usage:    "the API client ID",
+				Sources:  cli.EnvVars("API_AZURE_CLIENT_ID"),
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "cmd-client-id",
+				Usage:    "the CMD client ID",
+				Sources:  cli.EnvVars("CMD_AZURE_CLIENT_ID"),
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "cmd-tenant-id",
+				Usage:    "the CMD tenant ID",
+				Sources:  cli.EnvVars("CMD_AZURE_TENANT_ID"),
 				Required: true,
 			},
 		},
