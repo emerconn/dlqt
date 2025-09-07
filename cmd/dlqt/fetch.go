@@ -18,7 +18,7 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 		CacheFile: "msal_cache.json",
 	}
 	apiConfig := msal.APIConfig{
-		APIEndpoint: "http://localhost:8080/fetch",
+		APIEndpoint: cmd.String("api-url"),
 	}
 
 	token, err := msal.GetToken(ctx, &msalConfig)
