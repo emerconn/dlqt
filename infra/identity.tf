@@ -1,0 +1,75 @@
+resource "random_uuid" "dlqt_api_scope_read_id" {}
+
+resource "random_uuid" "dlqt_api_scope_retrigger_id" {}
+
+# TODO: how to expose the default app ID URI? azapi?
+resource "azuread_application" "dlqt_api" {
+  display_name     = "dlqt-api"
+  description      = "DLQT API"
+  sign_in_audience = "AzureADMyOrg"
+  owners           = ["f7ce87e4-54db-4a15-ae0e-e3fe0eef8eaa"] # me
+
+  api {
+    mapped_claims_enabled          = true
+    requested_access_token_version = 2
+
+    oauth2_permission_scope {
+      value   = "dlq.read"
+      type    = "User"
+      id      = random_uuid.dlqt_api_scope_read_id.result
+      enabled = true
+
+      admin_consent_description  = "Read DLQ Messages"
+      admin_consent_display_name = "Read DLQ Messages"
+      user_consent_description   = "Read DLQ Messages"
+      user_consent_display_name  = "Read DLQ Messages"
+    }
+
+    oauth2_permission_scope {
+      value   = "dlq.retrigger"
+      type    = "User"
+      id      = random_uuid.dlqt_api_scope_retrigger_id.result
+      enabled = true
+
+      admin_consent_description  = "Retrigger DLQ Messages"
+      admin_consent_display_name = "Retrigger DLQ Messages"
+      user_consent_description   = "Retrigger DLQ Messages"
+      user_consent_display_name  = "Retrigger DLQ Messages"
+    }
+  }
+}
+
+resource "azuread_service_principal" "dlqt_api" {
+  client_id                    = azuread_application.dlqt_api.client_id
+  app_role_assignment_required = true
+}
+
+resource "azuread_application" "dlqt_cmd" {
+  display_name     = "dlqt-cmd"
+  description      = "DLQT CMD"
+  sign_in_audience = "AzureADMyOrg"
+  owners           = ["f7ce87e4-54db-4a15-ae0e-e3fe0eef8eaa"] # me
+
+  public_client {
+    redirect_uris = ["http://localhost"] # allow AZ CLI
+  }
+
+  required_resource_access {
+    resource_app_id = azuread_application.dlqt_api.client_id
+
+    resource_access {
+      id   = random_uuid.dlqt_api_scope_read_id.result
+      type = "Scope"
+    }
+
+    resource_access {
+      id   = random_uuid.dlqt_api_scope_retrigger_id.result
+      type = "Scope"
+    }
+  }
+}
+
+resource "azuread_service_principal" "dlqt_cmd" {
+  client_id                    = azuread_application.dlqt_cmd.client_id
+  app_role_assignment_required = true
+}
