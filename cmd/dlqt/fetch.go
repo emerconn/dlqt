@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	"dlqt/internal/msal"
 
@@ -27,9 +28,12 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 	}
 	log.Printf("token: %s\n", token)
 
-	if err := msal.SendTokenToAPI(token, &apiConfig); err != nil {
-		return fmt.Errorf("failed to send token to API: %w", err)
+	req, err := http.NewRequest("GET", apiConfig.APIEndpoint, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
 	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json") // Optional, adjust as needed
 
 	return nil
 }

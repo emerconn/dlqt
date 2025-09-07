@@ -1,12 +1,9 @@
 package msal
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 )
@@ -51,30 +48,4 @@ func GetToken(ctx context.Context, config *MSALConfig) (string, error) {
 		return "", fmt.Errorf("failed to acquire token interactively: %w", err)
 	}
 	return result.AccessToken, nil
-}
-
-func SendTokenToAPI(token string, config *APIConfig) error {
-	// Create request payload
-	payload := map[string]string{
-		"token": token,
-	}
-
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal token: %w", err)
-	}
-
-	// Send POST request to API
-	resp, err := http.Post(config.APIEndpoint, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return fmt.Errorf("failed to send token to API: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("API returned status: %d", resp.StatusCode)
-	}
-
-	log.Println("token sent to API successfully")
-	return nil
 }
