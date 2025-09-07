@@ -1,21 +1,28 @@
 package msal
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 )
 
-type Config struct {
+type MSALConfig struct {
 	TenantID  string
 	ClientID  string
 	Scope     string
 	CacheFile string // Add this for configurability
 }
 
-func GetToken(ctx context.Context, config Config) (string, error) {
+type APIConfig struct {
+	APIEndpoint string
+}
+
+func GetToken(ctx context.Context, config *MSALConfig) (string, error) {
 	// set up cache to persist tokens
 	cacheAccessor := NewCacheAccessor(config.CacheFile)
 
@@ -33,9 +40,7 @@ func GetToken(ctx context.Context, config Config) (string, error) {
 		// silent token acquisition using the first account
 		result, err := client.AcquireTokenSilent(ctx, []string{config.Scope}, public.WithSilentAccount(accounts[0]))
 		if err == nil {
-			token := result.AccessToken
-			log.Printf("token acquired silently: %s", token)
-			return token, nil
+			return result.AccessToken, nil
 		}
 		log.Println("silent acquisition failed, proceeding to interactive")
 	}
@@ -45,8 +50,31 @@ func GetToken(ctx context.Context, config Config) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to acquire token interactively: %w", err)
 	}
+	return result.AccessToken, nil
+}
 
-	token := result.AccessToken
-	log.Printf("token acquired interactively: %s", token)
-	return token, nil
+func SendTokenToAPI(token string, config *APIConfig) error {
+	// Create request payload
+	payload := map[string]string{
+		"token": token,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal token: %w", err)
+	}
+
+	// Send POST request to API
+	resp, err := http.Post(config.APIEndpoint, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to send token to API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("API returned status: %d", resp.StatusCode)
+	}
+
+	log.Println("token sent to API successfully")
+	return nil
 }
