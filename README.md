@@ -7,7 +7,7 @@ CLI tool suite for interacting with Azure Service Bus DLQ
 ### `dlqt`
  
 - Developer oriented, for retriggering DLQ messages
-- uses `az login` for reading (requires Service Bus Data Reader role) and [auth](#auth) for retriggering
+- uses `az login` for reading (requires Service Bus Data Reader role) and [api](#api) for retriggering
 - run `dlqt -h` for usage info
 
 ### `dlqtools`
@@ -16,11 +16,11 @@ CLI tool suite for interacting with Azure Service Bus DLQ
 - uses `az login` for auth (requires Service Bus Data Owner role)
 - run `dlqtools -h` for usage info
 
-### `auth`
+### `api`
 
 - HTTP API service for authenticated DLQ message retriggering
 - runs in Azure Container Apps with managed identity
-- authenticates users via Azure AD tokens
+- authenticates users via MSAL tokens
 - provides fine-grained access control for message retriggering
  
 ## Architecture
@@ -32,7 +32,7 @@ The system consists of:
 4. Azure Service Bus with RBAC for the API service
  
 **Developer Workflow:**
-- Developers use `dlqt retrigger` which calls the `auth` API with their Azure AD token
+- Developers use `dlqt retrigger` which calls the `api` API with their Azure AD token
 - The API service validates the token and performs the retrigger operation using its managed identity
 - Developers cannot modify message contents, only retrigger
  
@@ -62,12 +62,12 @@ The system consists of:
   ```
 - shipped (see GitHub)
 
-### `auth`
+### `api`
 
 - local 
   ```bash
-  cd auth
-  docker build -t dlqt/auth .
+  cd api
+  docker build -t dlqt/api .
   ```
 - shipped (see GitHub)
 
@@ -83,10 +83,10 @@ tofu apply
 
 2. Build and push the API service container:
 ```bash
-cd auth
-docker build -t dlqt/auth .
-docker tag dlqt/auth <your-registry>/dlqt/auth:latest
-docker push <your-registry>/dlqt/auth:latest
+cd api
+docker build -t dlqt/api .
+docker tag dlqt/api <your-registry>/dlqt/api:latest
+docker push <your-registry>/dlqt/api:latest
 ```
 
 3. Update the container app image in Terraform and redeploy
@@ -95,7 +95,7 @@ docker push <your-registry>/dlqt/auth:latest
  
 ### `dlqt`
  
-- [ ] auth API, used Azure AD groups and something idk?
+- [ ] API, used Azure AD groups and something idk?
 - [ ] add more developer-friendly features
 
 ### `dlqtools`
