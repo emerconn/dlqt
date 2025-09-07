@@ -8,7 +8,7 @@ import (
 func main() {
 	log.Println("starting DLQT API")
 
-	http.HandleFunc("/fetch", fetchHandler)
+	http.Handle("/fetch", AuthMiddleware(http.HandlerFunc(fetchHandler)))
 
 	log.Println("server starting on port 8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
