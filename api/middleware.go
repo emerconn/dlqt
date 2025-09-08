@@ -16,16 +16,18 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// extract token from Authorization header
 		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			log.Printf("Missing or invalid Authorization header")
 			http.Error(w, "Missing or invalid Authorization header", http.StatusUnauthorized)
 			return
 		}
 		token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
 		if token == "" {
+			log.Printf("Empty token")
 			http.Error(w, "Empty token", http.StatusUnauthorized)
 			return
 		}
 
-		// hardcoded JWKS URL
+		// hardcoded JWKS URL using DLQT CMD tenant ID
 		jwksURL := "https://login.microsoftonline.com/f09f69e2-b684-4c08-9195-f8f10f54154c/discovery/v2.0/keys"
 		k, err := keyfunc.NewDefaultCtx(r.Context(), []string{jwksURL})
 		if err != nil {
@@ -34,10 +36,19 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// parse token with signature verification using keyfunc
-		_, err = jwt.Parse(token, k.Keyfunc)
+		// parse token with keyfunc (signature verification and standard claims)
+		parsed, err := jwt.Parse(token, k.Keyfunc)
 		if err != nil {
 			log.Printf("Token validation failed: %v", err)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		// validate audience claim
+		// TODO: remove hardcoded API client ID
+		claims, ok := parsed.Claims.(jwt.MapClaims)
+		if !ok || claims["aud"] != "api://e64205cb-fe54-4452-a6ab-7eec472bdfcc" {
+			log.Printf("Failed to extract claims: %v", err)
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
