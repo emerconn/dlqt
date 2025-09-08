@@ -6,7 +6,7 @@ CLI tool suite for interacting with Azure Service Bus DLQ
  
 ### `dlqt`
  
-- Developer oriented, for retriggering DLQ messages
+- Developer oriented, for reading and retriggering DLQ messages
 - uses Entra auth (MSAL) via App Registrations
 - run `dlqt -h` for usage info
 
@@ -18,10 +18,10 @@ CLI tool suite for interacting with Azure Service Bus DLQ
 
 ### `api`
 
-- HTTP API service for authenticated DLQ message retriggering
+- HTTP API service
 - runs in Azure Container Apps with managed identity
 - authenticates users via MSAL tokens
-- provides fine-grained access control for message retriggering
+- provides fine-grained access control for message reading and retriggering
  
 ## Architecture
  
