@@ -35,5 +35,5 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(fmt.Appendf(nil, `{"message": "fetch endpoint", "namespace": "%s", "queue": "%s", "deadLetterMessage": %v}`, namespace, queue, message))
+	w.Write(fmt.Appendf(nil, `{"namespace": "%s", "queue": "%s", "messageID": %s}`, namespace, queue, message.MessageID))
 }
