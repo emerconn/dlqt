@@ -47,8 +47,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// validate audience claim
 		// TODO: remove hardcoded API client ID
 		claims, ok := parsed.Claims.(jwt.MapClaims)
-		if !ok || claims["aud"] != "api://e64205cb-fe54-4452-a6ab-7eec472bdfcc" {
+		if !ok {
 			log.Printf("Failed to extract claims: %v", err)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		if claims["aud"] != "api://e64205cb-fe54-4452-a6ab-7eec472bdfcc" {
+			log.Printf("Invalid audience claim: %v", claims["aud"])
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
