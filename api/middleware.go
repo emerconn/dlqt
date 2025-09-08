@@ -27,7 +27,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// hardcoded JWKS URL using DLQT CMD tenant ID
+		// JWKS URL using CMD tenant ID
+		// TODO: remove hardcoded CMD tenant ID
 		jwksURL := "https://login.microsoftonline.com/f09f69e2-b684-4c08-9195-f8f10f54154c/discovery/v2.0/keys"
 		k, err := keyfunc.NewDefaultCtx(r.Context(), []string{jwksURL})
 		if err != nil {
@@ -56,6 +57,40 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// TODO: remove hardcoded API client ID
 		if claims["aud"] != "074c5ac1-4ab2-4a8a-b811-2d7b8c4e419f" {
 			log.Printf("Invalid audience claim: %v", claims["aud"])
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		// validate issuer claim
+		// TODO: remove hardcoded CMD tenant ID
+		if claims["iss"] != "https://login.microsoftonline.com/f09f69e2-b684-4c08-9195-f8f10f54154c/v2.0" {
+			log.Printf("Invalid issuer claim: %v", claims["iss"])
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		// validate scope claim based on endpoint
+		scp, ok := claims["scp"].(string)
+		if !ok {
+			log.Printf("Invalid scope claim: %v", claims["scp"])
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		var requiredScope string
+		switch r.URL.Path {
+		case "/fetch":
+			requiredScope = "dlq.read"
+		case "/retrigger":
+			requiredScope = "dlq.retrigger"
+		default:
+			log.Printf("Unauthorized path: %s", r.URL.Path)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		if !strings.Contains(scp, requiredScope) {
+			log.Printf("Missing required scope %s in claim: %v", requiredScope, claims["scp"])
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
