@@ -67,8 +67,14 @@ resource "azurerm_container_app" "api" {
   }
 }
 
-resource "azurerm_role_assignment" "this" {
+resource "azurerm_role_assignment" "api_app_reg_service_bus_data_owner" {
   scope                = azurerm_servicebus_namespace.this.id
   role_definition_name = "Azure Service Bus Data Owner"
   principal_id         = azurerm_container_app.api.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "me_service_bus_data_owner" {
+  scope                = azurerm_servicebus_namespace.this.id
+  role_definition_name = "Azure Service Bus Data Owner"
+  principal_id         = local.my_principal_id
 }

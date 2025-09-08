@@ -50,7 +50,7 @@ resource "azuread_application" "dlqt_cmd" {
   display_name     = "dlqt-cmd"
   description      = "DLQT CMD"
   sign_in_audience = "AzureADMyOrg"
-  owners           = ["f7ce87e4-54db-4a15-ae0e-e3fe0eef8eaa"] # me
+  owners           = [local.my_principal_id]
 
   public_client {
     redirect_uris = ["http://localhost"] # allow AZ CLI
