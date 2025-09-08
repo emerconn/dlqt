@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -33,7 +34,15 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Convert message to JSON
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("failed to marshal message to JSON: %v", err)
+		http.Error(w, fmt.Sprintf("failed to marshal message: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(fmt.Appendf(nil, `{"namespace": "%s", "queue": "%s", "messageID": %s}`, namespace, queue, message.MessageID))
+	w.Write(jsonData)
 }
