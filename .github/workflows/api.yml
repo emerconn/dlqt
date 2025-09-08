@@ -94,6 +94,7 @@ jobs:
     needs: build
     permissions:
       contents: read
+      security-events: write
 
     steps:
     - name: Extract SHA tag
@@ -103,7 +104,7 @@ jobs:
         echo "tag=${SHA_TAG}" >> $GITHUB_OUTPUT
 
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.33.1
       with:
         image-ref: ${{ steps.sha-tag.outputs.tag }}
         format: 'sarif'
