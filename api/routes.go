@@ -120,7 +120,6 @@ func retriggerHandler(w http.ResponseWriter, r *http.Request) {
 	// extract query parameters
 	namespace := r.URL.Query().Get("namespace")
 	queue := r.URL.Query().Get("queue")
-	log.Printf("received retrigger request: namespace=%s, queue=%s", namespace, queue)
 
 	// extract messageID from body
 	var payload map[string]string
@@ -136,6 +135,8 @@ func retriggerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "message-id not provided", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("received retrigger request: namespace=%s, queue=%s, messageID=%s", namespace, queue, messageID)
 
 	client, err := servicebus.GetClient(namespace + ".servicebus.windows.net")
 	if err != nil {
