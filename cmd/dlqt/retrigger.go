@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -13,7 +15,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func fetch(ctx context.Context, cmd *cli.Command) error {
+func retrigger(ctx context.Context, cmd *cli.Command) error {
 	// set configs
 	msalConfig := msal.MSALConfig{
 		TenantID:  cmd.String("cmd-tenant-id"),
@@ -22,7 +24,7 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 		CacheFile: "msal_cache.json",
 	}
 	apiConfig := msal.APIConfig{
-		APIEndpoint: cmd.String("api-url") + "/fetch",
+		APIEndpoint: cmd.String("api-url") + "/retrigger",
 	}
 
 	// add URL query parameters
@@ -38,12 +40,22 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 	}
 	log.Printf("token: %s\n", token)
 
+	// prepare JSON payload
+	payload := map[string]string{
+		"message-id": cmd.String("message-id"),
+	}
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
 	// create request and auth header
-	req, err := http.NewRequest("GET", fullURL, nil)
+	req, err := http.NewRequest("POST", fullURL, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
 
 	// execute request
 	client := &http.Client{}
