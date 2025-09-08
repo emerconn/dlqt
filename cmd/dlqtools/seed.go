@@ -19,7 +19,7 @@ func seedMessages(ctx context.Context, cmd *cli.Command) error {
 	log.Println("queue:", queue)
 	log.Println("number of messages:", numMessages)
 
-	client, err := servicebus.GetClient(namespace)
+	client, err := servicebus.GetClient(namespace + ".servicebus.windows.net")
 	if err != nil {
 		return fmt.Errorf("failed to get Service Bus client: %w", err)
 	}
