@@ -40,7 +40,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// parse token with keyfunc (signature verification and standard claims)
 		parsed, err := jwt.Parse(token, k.Keyfunc)
 		if err != nil {
-			log.Printf("Token validation failed: %v", err)
+			log.Printf("token validation failed: %v", err)
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
@@ -48,7 +48,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// extract claims
 		claims, ok := parsed.Claims.(jwt.MapClaims)
 		if !ok {
-			log.Printf("Failed to extract claims: %v", err)
+			log.Printf("failed to extract claims: %v", err)
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
@@ -56,7 +56,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// validate audience claim
 		// TODO: remove hardcoded API client ID
 		if claims["aud"] != "074c5ac1-4ab2-4a8a-b811-2d7b8c4e419f" {
-			log.Printf("Invalid audience claim: %v", claims["aud"])
+			log.Printf("invalid audience claim: %v", claims["aud"])
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
@@ -64,7 +64,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// validate issuer claim
 		// TODO: remove hardcoded CMD tenant ID
 		if claims["iss"] != "https://login.microsoftonline.com/f09f69e2-b684-4c08-9195-f8f10f54154c/v2.0" {
-			log.Printf("Invalid issuer claim: %v", claims["iss"])
+			log.Printf("invalid issuer claim: %v", claims["iss"])
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
@@ -72,7 +72,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// validate scope claim based on endpoint
 		scp, ok := claims["scp"].(string)
 		if !ok {
-			log.Printf("Invalid scope claim: %v", claims["scp"])
+			log.Printf("invalid scope claim: %v", claims["scp"])
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
@@ -84,18 +84,18 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		case "/retrigger":
 			requiredScope = "dlq.retrigger"
 		default:
-			log.Printf("Unauthorized path: %s", r.URL.Path)
+			log.Printf("unauthorized path: %s", r.URL.Path)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		if !strings.Contains(scp, requiredScope) {
-			log.Printf("Missing required scope %s in claim: %v", requiredScope, claims["scp"])
+			log.Printf("missing required scope %s in claim: %v", requiredScope, claims["scp"])
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		log.Println("Token validated successfully")
+		log.Println("token validated successfully")
 
 		// proceed to handler
 		next.ServeHTTP(w, r)
