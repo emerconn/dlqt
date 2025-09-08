@@ -101,24 +101,46 @@ func RetriggerDeadLetterMessage(ctx context.Context, client *azservicebus.Client
 	}
 	defer sender.Close(ctx)
 
-	// Receive the specific message from DLQ
-	messages, err := receiver.ReceiveMessages(ctx, 1, nil)
+	// Peek messages from DLQ to find the specific message by ID
+	var targetSequenceNumber *int64
+	maxPeek := 1000 // Limit to avoid infinite loop
+	peeked := 0
+	for peeked < maxPeek {
+		messages, err := receiver.PeekMessages(ctx, 10, nil) // Peek in batches of 10
+		if err != nil {
+			return fmt.Errorf("failed to peek messages from DLQ: %w", err)
+		}
+		if len(messages) == 0 {
+			break // No more messages
+		}
+		for _, msg := range messages {
+			if msg.MessageID == messageID {
+				targetSequenceNumber = msg.SequenceNumber
+				break
+			}
+		}
+		if targetSequenceNumber != nil {
+			break
+		}
+		peeked += len(messages)
+	}
+
+	if targetSequenceNumber == nil {
+		return fmt.Errorf("message with ID '%s' not found in DLQ for queue '%s'", messageID, queue)
+	}
+
+	// Receive the specific message using deferred receive
+	deferredMessages, err := receiver.ReceiveDeferredMessages(ctx, []int64{*targetSequenceNumber}, nil)
 	if err != nil {
-		return fmt.Errorf("failed to receive messages from DLQ: %w", err)
+		return fmt.Errorf("failed to receive deferred message: %w", err)
+	}
+	if len(deferredMessages) == 0 {
+		return fmt.Errorf("failed to receive the deferred message")
 	}
 
-	if len(messages) == 0 {
-		return fmt.Errorf("no messages found in DLQ for queue '%s'", queue)
-	}
+	message := deferredMessages[0]
 
-	message := messages[0]
-	if message.MessageID != messageID {
-		// If not the right message, complete it without processing
-		receiver.CompleteMessage(ctx, message, nil)
-		return fmt.Errorf("message ID '%s' not found", messageID)
-	}
-
-	// Create new message with same body but reset properties
+	// Create new message with same body
 	newMessage := &azservicebus.Message{
 		Body: message.Body,
 	}

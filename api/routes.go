@@ -110,3 +110,48 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
+
+func retriggerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// extract query parameters
+	namespace := r.URL.Query().Get("namespace")
+	queue := r.URL.Query().Get("queue")
+	log.Printf("received retrigger request: namespace=%s, queue=%s", namespace, queue)
+
+	// extract messageID from body
+	var payload map[string]string
+	err := json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		log.Printf("failed to decode JSON: %v", err)
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	messageID, ok := payload["message-id"]
+	if !ok {
+		log.Printf("message-id not provided in payload")
+		http.Error(w, "message-id not provided", http.StatusBadRequest)
+		return
+	}
+
+	client, err := servicebus.GetClient(namespace + ".servicebus.windows.net")
+	if err != nil {
+		log.Printf("failed to get service bus client: %v", err)
+		http.Error(w, fmt.Sprintf("failed to get service bus client: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = servicebus.RetriggerDeadLetterMessage(r.Context(), client, queue, messageID)
+	if err != nil {
+		log.Printf("failed to retrigger dead letter message: %v", err)
+		http.Error(w, fmt.Sprintf("failed to retrigger message: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Send success response
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Message retriggered successfully"))
+}
