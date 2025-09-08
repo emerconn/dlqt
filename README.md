@@ -55,7 +55,8 @@ graph TD
         B2 <-->|AZ SDK| B3
     end
 
-    L -->|federated identity
+    L -->|pull image| B2
+    F -->|federated identity
           continuous on main| B2
 
     subgraph "CLI"
