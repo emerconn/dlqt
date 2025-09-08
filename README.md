@@ -31,6 +31,39 @@ The system consists of:
 3. `api` - Containerized API service for secure message retriggering
 4. Azure Service Bus with RBAC for the API service
  
+```mermaid
+graph TD
+    subgraph "CI/CD"
+        A["Terraform"]
+
+        C["GitHub Actions"]
+        C --> D["CMD: Build Binaries"]
+        C --> F["API: Build/Deploy Image"]
+    end
+
+    subgraph "Infra"
+        B["Azure"]
+        B --> B1["App Registrations
+                  (API & CMD)"]
+        B --> B2["Container App (API)"]
+        B --> B3["Service Bus
+                  Namespace & Queue"]
+        B2 -->|Azure SDK| B3
+    end
+
+    subgraph "CLI"
+        H["dlqt
+          (dev)"] <-->|MSAL| B2
+        K["dlqtools
+          (admin)"] -->|Azure SDK| B3
+    end
+
+    A --> B
+    F -->|continuous on main| B2
+    D --> H
+    D --> K
+```
+
 **Developer Workflow:**
 - Developers use `dlqt retrigger` which calls the `api` API with their Azure AD token
 - The API service validates the token and performs the retrigger operation using its managed identity
@@ -39,7 +72,7 @@ The system consists of:
 **Admin Workflow:**
 - Admins use `dlqtools` with direct Service Bus access for full queue management
 - Includes seed, purge, and other admin operations
- 
+
 ## Build
  
 ### `dlqt`
