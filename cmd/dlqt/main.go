@@ -77,8 +77,22 @@ func main() {
 			{
 				Name:  "fetch",
 				Usage: "Fetch one message from the dead letter queue",
-				Action: func(ctx context.Context, c *cli.Command) error {
-					return fetch(ctx, c)
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return fetch(ctx, cmd)
+				},
+			},
+			{
+				Name:  "retrig",
+				Usage: "Retrigger one message from the dead letter queue",
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return retrigger(ctx, cmd)
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "message-id",
+						Usage:    "the message ID to retrigger",
+						Required: true,
+					},
 				},
 			},
 		},
