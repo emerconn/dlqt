@@ -52,6 +52,7 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 	}
 	defer resp.Body.Close()
 
+	// check response
 	if resp.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
