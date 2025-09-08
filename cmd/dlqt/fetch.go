@@ -14,6 +14,7 @@ import (
 )
 
 func fetch(ctx context.Context, cmd *cli.Command) error {
+	// set configs
 	msalConfig := msal.MSALConfig{
 		TenantID:  cmd.String("cmd-tenant-id"),
 		ClientID:  cmd.String("cmd-client-id"),
@@ -52,16 +53,22 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 	}
 	defer resp.Body.Close()
 
-	// check response
+	// check HTTP status code
 	if resp.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("failed to read response body: %w", err)
+			return fmt.Errorf("failed to read error response body: %w", err)
 		}
 		return fmt.Errorf("failed to fetch data: %d %s", resp.StatusCode, string(body))
 	}
 
-	log.Println("request sent successfully")
+	// read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	log.Printf("response body: %s", string(body))
 
 	// TODO: handle response body
 
