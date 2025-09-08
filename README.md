@@ -7,7 +7,7 @@ CLI tool suite for interacting with Azure Service Bus DLQ
 ### `dlqt`
  
 - Developer oriented, for retriggering DLQ messages
-- uses `az login` for reading (requires Service Bus Data Reader role) and [api](#api) for retriggering
+- uses Entra auth (MSAL) via App Registrations
 - run `dlqt -h` for usage info
 
 ### `dlqtools`
