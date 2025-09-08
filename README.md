@@ -33,12 +33,16 @@ The system consists of:
  
 ```mermaid
 graph TD
-    subgraph "CI/CD"
-        A["OpenTofu"]
-
+    subgraph "GitHub"
         C["GitHub Actions"]
-        C --> D["CMD: Build Binaries"]
-        C --> F["API: Build/Deploy Image"]
+        C --> A["infra.yml
+                OpenTofu"]
+        C --> D["cmd.yml
+                build binaries"]
+        C --> F["api.yml
+                build/deploy image"]
+        F --> L["GitHub Container Registry"]
+        D --> G["GitHub Artifacts"]
     end
 
     subgraph "Infra"
@@ -51,6 +55,9 @@ graph TD
         B2 <-->|AZ SDK| B3
     end
 
+    L -->|federated identity
+          continuous on main| B2
+
     subgraph "CLI"
         H["dlqt
           (dev)"] <-->|MSAL| B2
@@ -58,10 +65,9 @@ graph TD
           (admin)"] <-->|AZ SDK| B3
     end
 
-    A --> B
-    F -->|continuous on main| B2
-    D --> H
-    D --> K
+    A -->|federated identity| B
+    G -->|download to local| H
+    G -->|download to local| K
 ```
 
 **Developer Workflow:**
