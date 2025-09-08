@@ -17,7 +17,7 @@ func purgeMessages(ctx context.Context, cmd *cli.Command) error {
 	log.Println("namespace:", namespace)
 	log.Println("queue:", queue)
 
-	client, err := servicebus.GetClient(namespace)
+	client, err := servicebus.GetClient(namespace + ".servicebus.windows.net")
 	if err != nil {
 		return fmt.Errorf("failed to get Service Bus client: %w", err)
 	}
