@@ -83,7 +83,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		switch r.URL.Path {
 		case "/fetch":
 			requiredScope = "dlq.read"
-		case "/retrig":
+		case "/retrigger":
 			requiredScope = "dlq.retrigger"
 		default:
 			log.Printf("unauthorized path: %s", r.URL.Path)

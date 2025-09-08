@@ -24,7 +24,7 @@ func retrigger(ctx context.Context, cmd *cli.Command) error {
 		CacheFile: "msal_cache.json",
 	}
 	apiConfig := msal.APIConfig{
-		APIEndpoint: cmd.String("api-url") + "/retrig",
+		APIEndpoint: cmd.String("api-url") + "/retrigger",
 	}
 
 	// add URL query parameters

@@ -82,7 +82,7 @@ func main() {
 				},
 			},
 			{
-				Name:  "retrig",
+				Name:  "retrigger",
 				Usage: "Retrigger one message from the dead letter queue",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return retrigger(ctx, cmd)
