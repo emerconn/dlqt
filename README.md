@@ -34,7 +34,7 @@ The system consists of:
 ```mermaid
 graph TD
     subgraph "CI/CD"
-        A["Terraform"]
+        A["OpenTofu"]
 
         C["GitHub Actions"]
         C --> D["CMD: Build Binaries"]
