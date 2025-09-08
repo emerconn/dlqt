@@ -164,5 +164,11 @@ func FetchDeadLetterMessage(ctx context.Context, client *azservicebus.Client, qu
 	message := messages[0]
 	log.Printf("Fetched message %s from DLQ", message.MessageID)
 
+	// Complete the message to remove it from the DLQ
+	// err = receiver.CompleteMessage(ctx, message, nil)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to complete DLQ message: %w", err)
+	// }
+
 	return message, nil
 }
