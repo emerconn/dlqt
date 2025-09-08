@@ -15,7 +15,7 @@ type MessageResponse struct {
 	Namespace                  string                 `json:"namespace"`
 	Queue                      string                 `json:"queue"`
 	MessageID                  string                 `json:"messageID"`
-	Body                       []string               `json:"body"`
+	Body                       string                 `json:"body"` // Changed from []string to string
 	ContentType                *string                `json:"contentType,omitempty"`
 	CorrelationID              *string                `json:"correlationID,omitempty"`
 	DeadLetterErrorDescription *string                `json:"deadLetterErrorDescription,omitempty"`
@@ -64,17 +64,11 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Convert ReceivedMessage to MessageResponse for JSON serialization
-	bodyStrings := make([]string, len(message.Body))
-	for i, body := range message.Body {
-		bodyStrings[i] = string(body)
-	}
-
 	response := MessageResponse{
 		Namespace:                  namespace,
 		Queue:                      queue,
 		MessageID:                  message.MessageID,
-		Body:                       bodyStrings,
+		Body:                       string(message.Body),
 		ContentType:                message.ContentType,
 		CorrelationID:              message.CorrelationID,
 		DeadLetterErrorDescription: message.DeadLetterErrorDescription,
