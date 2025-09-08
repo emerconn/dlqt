@@ -64,11 +64,17 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get string of the first slice of bytes
+	var bodyString string
+	if len(message.Body) > 0 {
+		bodyString = string(message.Body[0])
+	}
+
 	response := MessageResponse{
 		Namespace:                  namespace,
 		Queue:                      queue,
 		MessageID:                  message.MessageID,
-		Body:                       string(message.Body),
+		Body:                       bodyString,
 		ContentType:                message.ContentType,
 		CorrelationID:              message.CorrelationID,
 		DeadLetterErrorDescription: message.DeadLetterErrorDescription,
