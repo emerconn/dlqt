@@ -1,3 +1,5 @@
+// TODO: use better logs for both internal and HTTP
+
 package main
 
 import (
