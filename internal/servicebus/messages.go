@@ -101,64 +101,52 @@ func RetriggerDeadLetterMessage(ctx context.Context, client *azservicebus.Client
 	}
 	defer sender.Close(ctx)
 
-	// Peek messages from DLQ to find the specific message by ID
-	var targetSequenceNumber *int64
-	maxPeek := 1000 // Limit to avoid infinite loop
-	peeked := 0
-	for peeked < maxPeek {
-		messages, err := receiver.PeekMessages(ctx, 10, nil) // Peek in batches of 10
+	// Receive messages in batches until we find the specific message
+	batchSize := 10
+	maxBatches := 100 // Limit to avoid infinite loop
+	for range maxBatches {
+		messages, err := receiver.ReceiveMessages(ctx, batchSize, nil)
 		if err != nil {
-			return fmt.Errorf("failed to peek messages from DLQ: %w", err)
+			return fmt.Errorf("failed to receive messages from DLQ: %w", err)
 		}
+
 		if len(messages) == 0 {
 			break // No more messages
 		}
-		for _, msg := range messages {
-			if msg.MessageID == messageID {
-				targetSequenceNumber = msg.SequenceNumber
-				break
+
+		for _, message := range messages {
+			if message.MessageID == messageID {
+				// Found the message, create new message with same body
+				newMessage := &azservicebus.Message{
+					Body: message.Body,
+				}
+
+				// Send to main queue
+				err = sender.SendMessage(ctx, newMessage, nil)
+				if err != nil {
+					return fmt.Errorf("failed to send retriggered message: %w", err)
+				}
+
+				// Complete the original DLQ message
+				err = receiver.CompleteMessage(ctx, message, nil)
+				if err != nil {
+					return fmt.Errorf("failed to complete DLQ message: %w", err)
+				}
+
+				log.Printf("Successfully retriggered message %s from DLQ to main queue", messageID)
+				return nil
+			} else {
+				// Not the target message, abandon it to put back in DLQ
+				err = receiver.AbandonMessage(ctx, message, nil)
+				if err != nil {
+					log.Printf("failed to abandon message %s: %v", message.MessageID, err)
+					// Continue anyway
+				}
 			}
 		}
-		if targetSequenceNumber != nil {
-			break
-		}
-		peeked += len(messages)
 	}
 
-	if targetSequenceNumber == nil {
-		return fmt.Errorf("message with ID '%s' not found in DLQ for queue '%s'", messageID, queue)
-	}
-
-	// Receive the specific message using deferred receive
-	deferredMessages, err := receiver.ReceiveDeferredMessages(ctx, []int64{*targetSequenceNumber}, nil)
-	if err != nil {
-		return fmt.Errorf("failed to receive deferred message: %w", err)
-	}
-	if len(deferredMessages) == 0 {
-		return fmt.Errorf("failed to receive the deferred message")
-	}
-
-	message := deferredMessages[0]
-
-	// Create new message with same body
-	newMessage := &azservicebus.Message{
-		Body: message.Body,
-	}
-
-	// Send to main queue
-	err = sender.SendMessage(ctx, newMessage, nil)
-	if err != nil {
-		return fmt.Errorf("failed to send retriggered message: %w", err)
-	}
-
-	// Complete the original DLQ message
-	err = receiver.CompleteMessage(ctx, message, nil)
-	if err != nil {
-		return fmt.Errorf("failed to complete DLQ message: %w", err)
-	}
-
-	log.Printf("Successfully retriggered message %s from DLQ to main queue", messageID)
-	return nil
+	return fmt.Errorf("message with ID '%s' not found in DLQ for queue '%s' after checking %d messages", messageID, queue, batchSize*maxBatches)
 }
 
 // FetchDeadLetterMessage fetches one message from the dead letter queue
