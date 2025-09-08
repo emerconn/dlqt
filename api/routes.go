@@ -153,5 +153,5 @@ func retriggerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send success response
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message retriggered successfully"))
+	w.Write(fmt.Appendf(nil, "message %s retriggered successfully", messageID))
 }
