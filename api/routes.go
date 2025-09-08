@@ -5,9 +5,39 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"dlqt/internal/servicebus"
 )
+
+// MessageResponse represents the JSON-serializable version of a Service Bus message
+type MessageResponse struct {
+	Namespace                  string                 `json:"namespace"`
+	Queue                      string                 `json:"queue"`
+	MessageID                  string                 `json:"messageID"`
+	Body                       []string               `json:"body"`
+	ContentType                *string                `json:"contentType,omitempty"`
+	CorrelationID              *string                `json:"correlationID,omitempty"`
+	DeadLetterErrorDescription *string                `json:"deadLetterErrorDescription,omitempty"`
+	DeadLetterReason           *string                `json:"deadLetterReason,omitempty"`
+	DeadLetterSource           *string                `json:"deadLetterSource,omitempty"`
+	DeliveryCount              uint32                 `json:"deliveryCount"`
+	EnqueuedSequenceNumber     *int64                 `json:"enqueuedSequenceNumber,omitempty"`
+	EnqueuedTime               *time.Time             `json:"enqueuedTime,omitempty"`
+	ExpiresAt                  *time.Time             `json:"expiresAt,omitempty"`
+	LockedUntil                *time.Time             `json:"lockedUntil,omitempty"`
+	PartitionKey               *string                `json:"partitionKey,omitempty"`
+	ReplyTo                    *string                `json:"replyTo,omitempty"`
+	ReplyToSessionID           *string                `json:"replyToSessionID,omitempty"`
+	ScheduledEnqueueTime       *time.Time             `json:"scheduledEnqueueTime,omitempty"`
+	SequenceNumber             *int64                 `json:"sequenceNumber,omitempty"`
+	SessionID                  *string                `json:"sessionID,omitempty"`
+	State                      int32                  `json:"state"`
+	Subject                    *string                `json:"subject,omitempty"`
+	TimeToLive                 *time.Duration         `json:"timeToLive,omitempty"`
+	To                         *string                `json:"to,omitempty"`
+	ApplicationProperties      map[string]interface{} `json:"applicationProperties,omitempty"`
+}
 
 func fetchHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -34,8 +64,42 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Convert message to JSON
-	jsonData, err := json.Marshal(message)
+	// Convert ReceivedMessage to MessageResponse for JSON serialization
+	bodyStrings := make([]string, len(message.Body))
+	for i, body := range message.Body {
+		bodyStrings[i] = string(body)
+	}
+
+	response := MessageResponse{
+		Namespace:                  namespace,
+		Queue:                      queue,
+		MessageID:                  message.MessageID,
+		Body:                       bodyStrings,
+		ContentType:                message.ContentType,
+		CorrelationID:              message.CorrelationID,
+		DeadLetterErrorDescription: message.DeadLetterErrorDescription,
+		DeadLetterReason:           message.DeadLetterReason,
+		DeadLetterSource:           message.DeadLetterSource,
+		DeliveryCount:              message.DeliveryCount,
+		EnqueuedSequenceNumber:     message.EnqueuedSequenceNumber,
+		EnqueuedTime:               message.EnqueuedTime,
+		ExpiresAt:                  message.ExpiresAt,
+		LockedUntil:                message.LockedUntil,
+		PartitionKey:               message.PartitionKey,
+		ReplyTo:                    message.ReplyTo,
+		ReplyToSessionID:           message.ReplyToSessionID,
+		ScheduledEnqueueTime:       message.ScheduledEnqueueTime,
+		SequenceNumber:             message.SequenceNumber,
+		SessionID:                  message.SessionID,
+		State:                      int32(message.State),
+		Subject:                    message.Subject,
+		TimeToLive:                 message.TimeToLive,
+		To:                         message.To,
+		ApplicationProperties:      message.ApplicationProperties,
+	}
+
+	// Convert to JSON
+	jsonData, err := json.Marshal(response)
 	if err != nil {
 		log.Printf("failed to marshal message to JSON: %v", err)
 		http.Error(w, fmt.Sprintf("failed to marshal message: %v", err), http.StatusInternalServerError)
