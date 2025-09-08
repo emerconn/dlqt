@@ -43,7 +43,6 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json") // Optional, adjust as needed
 
 	// execute request
 	client := &http.Client{}
