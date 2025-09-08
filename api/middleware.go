@@ -25,8 +25,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		log.Printf(token)
-
 		// hardcoded JWKS URL
 		jwksURL := "https://login.microsoftonline.com/f09f69e2-b684-4c08-9195-f8f10f54154c/discovery/v2.0/keys"
 		k, err := keyfunc.NewDefaultCtx(r.Context(), []string{jwksURL})
