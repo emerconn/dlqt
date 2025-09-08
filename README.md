@@ -35,35 +35,27 @@ The system consists of:
 graph TD
     subgraph "GitHub"
         C["GitHub Actions"]
-        C --> A["infra.yml
-                OpenTofu"]
-        C --> D["cmd.yml
-                build binaries"]
-        C --> F["api.yml
-                build/deploy image"]
+        C --> A["infra.yml<br>OpenTofu"]
+        C --> D["cmd.yml<br>build binaries"]
+        C --> F["api.yml<br>build/deploy image"]
         F --> L["GitHub Container Registry"]
         D --> G["GitHub Artifacts"]
     end
 
     subgraph "Infra"
         B["Azure"]
-        B --> B1["App Registrations
-                  (API & CMD)"]
+        B --> B1["App Registrations<br>(API & CMD)"]
         B --> B2["Container App (API)"]
-        B --> B3["Service Bus
-                  Namespace/Queue"]
+        B --> B3["Service Bus<br>Namespace/Queue"]
         B2 <-->|AZ SDK| B3
     end
 
     L -->|pull image| B2
-    F -->|federated identity
-          continuous on main| B2
+    F -->|federated identity<br>continuous on main| B2
 
     subgraph "CLI"
-        H["dlqt
-          (dev)"] <-->|MSAL| B2
-        K["dlqtools
-          (admin)"] <-->|AZ SDK| B3
+        H["dlqt<br>(dev)"] <-->|MSAL| B2
+        K["dlqtools<br>(admin)"] <-->|AZ SDK| B3
     end
 
     A -->|federated identity| B
