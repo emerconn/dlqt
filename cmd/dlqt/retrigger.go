@@ -50,7 +50,7 @@ func retrigger(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// create request and auth header
-	req, err := http.NewRequest("POST", fullURL, bytes.NewBuffer(jsonPayload))
+	req, err := http.NewRequest("PATCH", fullURL, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
