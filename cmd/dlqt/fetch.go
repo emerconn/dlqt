@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 
 	"dlqt/internal/msal"
 
@@ -23,6 +24,12 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 		APIEndpoint: cmd.String("api-url") + "/fetch",
 	}
 
+	// add URL query parameters
+	params := url.Values{}
+	params.Add("namespace", cmd.String("namespace"))
+	params.Add("queue", cmd.String("queue"))
+	fullURL := apiConfig.APIEndpoint + "?" + params.Encode()
+
 	// get JWT
 	token, err := msal.GetToken(ctx, &msalConfig)
 	if err != nil {
@@ -31,14 +38,12 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 	log.Printf("token: %s\n", token)
 
 	// create request and auth header
-	req, err := http.NewRequest("GET", apiConfig.APIEndpoint, nil)
+	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json") // Optional, adjust as needed
-
-	// TODO: add request body with service bus message ID
 
 	// execute request
 	client := &http.Client{}
