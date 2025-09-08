@@ -47,15 +47,15 @@ graph TD
                   (API & CMD)"]
         B --> B2["Container App (API)"]
         B --> B3["Service Bus
-                  Namespace & Queue"]
-        B2 -->|Azure SDK| B3
+                  Namespace/Queue"]
+        B2 <-->|AZ SDK| B3
     end
 
     subgraph "CLI"
         H["dlqt
           (dev)"] <-->|MSAL| B2
         K["dlqtools
-          (admin)"] -->|Azure SDK| B3
+          (admin)"] <-->|AZ SDK| B3
     end
 
     A --> B
