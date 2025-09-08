@@ -12,11 +12,11 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract query parameters
+	// extract query parameters
 	namespace := r.URL.Query().Get("namespace")
 	queue := r.URL.Query().Get("queue")
 
-	// Log them
+	// log them
 	log.Printf("Received fetch request: namespace=%s, queue=%s", namespace, queue)
 
 	w.Header().Set("Content-Type", "application/json")
