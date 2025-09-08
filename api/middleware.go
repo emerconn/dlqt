@@ -44,6 +44,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// extract claims
 		claims, ok := parsed.Claims.(jwt.MapClaims)
 		if !ok {
 			log.Printf("Failed to extract claims: %v", err)
