@@ -43,14 +43,21 @@ resource "azuread_application" "dlqt_api" {
   }
 }
 
-resource "azuread_application_identifier_uri" "dlqt_api" {
-  application_id = azuread_application.dlqt_api.id
-  identifier_uri = "api://${azuread_application.dlqt_api.id}"
-}
-
 resource "azuread_service_principal" "dlqt_api" {
   client_id                    = azuread_application.dlqt_api.client_id
   app_role_assignment_required = true
+}
+
+resource "azuread_application_identifier_uri" "dlqt_api" {
+  application_id = azuread_application.dlqt_api.id
+  identifier_uri = "api://${azuread_application.dlqt_api.client_id}"
+}
+
+resource "azuread_application_known_clients" "dlqt_api" {
+  application_id = azuread_application.dlqt_api.id
+  known_client_ids = [
+    azuread_application.dlqt_cmd.client_id
+  ]
 }
 
 # ===== DLQT CMD app reg ======
