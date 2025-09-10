@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"time"
@@ -108,7 +109,7 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	w.Write([]byte(html.EscapeString(string(jsonData))))
 }
 
 func retriggerHandler(w http.ResponseWriter, r *http.Request) {
@@ -154,5 +155,5 @@ func retriggerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send success response
 	w.WriteHeader(http.StatusOK)
-	w.Write(fmt.Appendf(nil, "message %s retriggered successfully", messageID))
+	w.Write(fmt.Appendf(nil, "message %s retriggered successfully", html.EscapeString(messageID)))
 }
