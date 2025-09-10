@@ -53,10 +53,13 @@ resource "azuread_application_identifier_uri" "dlqt_api" {
   identifier_uri = "api://${azuread_application.dlqt_api.client_id}"
 }
 
-resource "azuread_application_known_clients" "dlqt_api" {
-  application_id = azuread_application.dlqt_api.id
-  known_client_ids = [
-    azuread_application.dlqt_cmd.client_id
+resource "azuread_application_pre_authorized" "dlqt_api" {
+  application_id       = azuread_application.dlqt_api.id
+  authorized_client_id = azuread_application.dlqt_cmd.client_id
+
+  permission_ids = [
+    resource.random_uuid.dlqt_api_scope_read_id.result,
+    resource.random_uuid.dlqt_api_scope_retrigger_id.result,
   ]
 }
 
