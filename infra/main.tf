@@ -3,13 +3,7 @@ resource "azurerm_resource_group" "this" {
   location = "centralus"
 }
 
-resource "azurerm_log_analytics_workspace" "this" {
-  name                = "law-dlqt"
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-}
+# ===== Service Bus =====
 
 resource "azurerm_servicebus_namespace" "this" {
   name                = "sb-dlqt"
@@ -21,6 +15,16 @@ resource "azurerm_servicebus_namespace" "this" {
 resource "azurerm_servicebus_queue" "this" {
   name         = "sbq-dlqt-1"
   namespace_id = azurerm_servicebus_namespace.this.id
+}
+
+# ===== Container App (API) =====
+
+resource "azurerm_log_analytics_workspace" "this" {
+  name                = "law-dlqt"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
 }
 
 resource "azurerm_container_app_environment" "this" {
