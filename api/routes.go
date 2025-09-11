@@ -3,37 +3,57 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"dlqt/internal/servicebus"
 )
 
+type ErrorResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message,omitempty"`
+}
+
+type SuccessResponse struct {
+	Message string `json:"message"`
+}
+
+func respondError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(ErrorResponse{Error: message})
+}
+
+func respondSuccess(w http.ResponseWriter, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(SuccessResponse{Message: message})
+}
+
 func fetchHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		respondError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	// extract query parameters
 	namespace := r.URL.Query().Get("namespace")
 	queue := r.URL.Query().Get("queue")
-	log.Printf("received fetch request: namespace=%s, queue=%s", namespace, queue)
+	slog.Info("received fetch request", "namespace", namespace, "queue", queue)
 
 	// create service bus client
 	client, err := servicebus.GetClient(namespace + ".servicebus.windows.net")
 	if err != nil {
-		log.Printf("failed to get service bus client: %v", err)
-		http.Error(w, fmt.Sprintf("failed to get service bus client: %v", err), http.StatusInternalServerError)
+		slog.Error("failed to get service bus client", "error", err)
+		respondError(w, http.StatusInternalServerError, "failed to get service bus client")
 		return
 	}
 
 	// fetch dead letter message
 	message, err := servicebus.FetchDeadLetterMessage(r.Context(), client, queue)
 	if err != nil {
-		log.Printf("failed to fetch dead letter message: %v", err)
-		http.Error(w, fmt.Sprintf("failed to fetch dead letter message: %v", err), http.StatusInternalServerError)
+		slog.Error("failed to fetch dead letter message", "error", err)
+		respondError(w, http.StatusInternalServerError, "failed to fetch dead letter message")
 		return
 	}
 
@@ -75,8 +95,8 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 	// convert to JSON
 	jsonResponse, err := json.Marshal(deadLetterMessage)
 	if err != nil {
-		log.Printf("failed to marshal dead letter message to JSON: %v", err)
-		http.Error(w, fmt.Sprintf("failed to marshal dead letter message: %v", err), http.StatusInternalServerError)
+		slog.Error("failed to marshal dead letter message to JSON", "error", err)
+		respondError(w, http.StatusInternalServerError, "failed to marshal dead letter message")
 		return
 	}
 
@@ -87,7 +107,7 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 
 func retriggerHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPatch {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		respondError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -99,36 +119,35 @@ func retriggerHandler(w http.ResponseWriter, r *http.Request) {
 	var requestBody map[string]string
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
-		log.Printf("failed to decode JSON: %v", err)
-		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		slog.Error("failed to decode JSON", "error", err)
+		respondError(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	// extract messageID from body
 	messageID, ok := requestBody["message-id"]
 	if !ok {
-		log.Printf("message-id not provided in request body")
-		http.Error(w, "message-id not provided", http.StatusBadRequest)
+		slog.Error("message-id not provided in request body")
+		respondError(w, http.StatusBadRequest, "message-id not provided")
 		return
 	}
 
-	log.Printf("received retrigger request: namespace=%s, queue=%s, messageID=%s", namespace, queue, messageID)
+	slog.Info("received retrigger request", "namespace", namespace, "queue", queue, "messageID", messageID)
 
 	client, err := servicebus.GetClient(namespace + ".servicebus.windows.net")
 	if err != nil {
-		log.Printf("failed to get service bus client: %v", err)
-		http.Error(w, fmt.Sprintf("failed to get service bus client: %v", err), http.StatusInternalServerError)
+		slog.Error("failed to get service bus client", "error", err)
+		respondError(w, http.StatusInternalServerError, "failed to get service bus client")
 		return
 	}
 
 	err = servicebus.RetriggerDeadLetterMessage(r.Context(), client, queue, messageID)
 	if err != nil {
-		log.Printf("failed to retrigger dead letter message: %v", err)
-		http.Error(w, fmt.Sprintf("failed to retrigger message: %v", err), http.StatusInternalServerError)
+		slog.Error("failed to retrigger dead letter message", "error", err)
+		respondError(w, http.StatusInternalServerError, "failed to retrigger message")
 		return
 	}
 
 	// Send success response
-	w.WriteHeader(http.StatusOK)
-	w.Write(fmt.Appendf(nil, "message %s retriggered successfully", html.EscapeString(messageID)))
+	respondSuccess(w, fmt.Sprintf("message %s retriggered successfully", messageID))
 }
