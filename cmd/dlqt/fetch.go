@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 
 	"dlqt/internal/msal"
+	"dlqt/internal/servicebus"
 
 	"github.com/urfave/cli/v3"
 )
@@ -68,9 +71,18 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	log.Printf("response body: %s", string(body))
+	// unescape HTML entities in the response
+	unescapedBody := html.UnescapeString(string(body))
+	log.Printf("unescaped response body: %s", unescapedBody)
 
-	// TODO: handle response body
+	// parse JSON response
+	var message servicebus.MessageResponse
+	err = json.Unmarshal([]byte(unescapedBody), &message)
+	if err != nil {
+		return fmt.Errorf("failed to parse JSON response: %w", err)
+	}
+
+	// TODO: handle parsed message
 
 	return nil
 }
