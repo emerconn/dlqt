@@ -21,6 +21,7 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 	queue := r.URL.Query().Get("queue")
 	log.Printf("received fetch request: namespace=%s, queue=%s", namespace, queue)
 
+	// create service bus client
 	client, err := servicebus.GetClient(namespace + ".servicebus.windows.net")
 	if err != nil {
 		log.Printf("failed to get service bus client: %v", err)
@@ -28,6 +29,7 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// fetch dead letter message
 	message, err := servicebus.FetchDeadLetterMessage(r.Context(), client, queue)
 	if err != nil {
 		log.Printf("failed to fetch dead letter message: %v", err)
@@ -36,16 +38,17 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get string of the first slice of bytes
-	var bodyString string
+	var messageBody string
 	if len(message.Body) > 0 {
-		bodyString = string(message.Body[0])
+		messageBody = string(message.Body[0])
 	}
 
-	response := &servicebus.Message{
+	// map to JSON-serializable struct
+	deadLetterMessage := &servicebus.DeadLetterMessage{
 		Namespace:                  namespace,
 		Queue:                      queue,
 		MessageID:                  message.MessageID,
-		Body:                       bodyString,
+		Body:                       messageBody,
 		ContentType:                message.ContentType,
 		CorrelationID:              message.CorrelationID,
 		DeadLetterErrorDescription: message.DeadLetterErrorDescription,
@@ -70,16 +73,16 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// convert to JSON
-	jsonData, err := json.Marshal(response)
+	jsonResponse, err := json.Marshal(deadLetterMessage)
 	if err != nil {
-		log.Printf("failed to marshal message to JSON: %v", err)
-		http.Error(w, fmt.Sprintf("failed to marshal message: %v", err), http.StatusInternalServerError)
+		log.Printf("failed to marshal dead letter message to JSON: %v", err)
+		http.Error(w, fmt.Sprintf("failed to marshal dead letter message: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	w.Write(jsonResponse)
 }
 
 func retriggerHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,16 +96,18 @@ func retriggerHandler(w http.ResponseWriter, r *http.Request) {
 	queue := r.URL.Query().Get("queue")
 
 	// extract messageID from body
-	var payload map[string]string
-	err := json.NewDecoder(r.Body).Decode(&payload)
+	var requestBody map[string]string
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		log.Printf("failed to decode JSON: %v", err)
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
-	messageID, ok := payload["message-id"]
+
+	// extract messageID from body
+	messageID, ok := requestBody["message-id"]
 	if !ok {
-		log.Printf("message-id not provided in payload")
+		log.Printf("message-id not provided in request body")
 		http.Error(w, "message-id not provided", http.StatusBadRequest)
 		return
 	}

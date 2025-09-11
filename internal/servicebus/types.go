@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// JSON-serializable version of a Service Bus message
-type Message struct {
+// JSON-serializable version of a Service Bus dead letter message
+type DeadLetterMessage struct {
 	Namespace                  string         `json:"namespace"`
 	Queue                      string         `json:"queue"`
 	MessageID                  string         `json:"messageID"`
