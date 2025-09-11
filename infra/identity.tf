@@ -41,6 +41,10 @@ resource "azuread_application" "dlqt_api" {
       user_consent_display_name  = "Retrigger DLQ Messages"
     }
   }
+
+  lifecycle {
+    ignore_changes = [ identifier_uris ]
+  }
 }
 
 resource "azuread_service_principal" "dlqt_api" {
