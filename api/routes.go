@@ -41,7 +41,7 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 		bodyString = string(message.Body[0])
 	}
 
-	response := &servicebus.MessageResponse{
+	response := &servicebus.Message{
 		Namespace:                  namespace,
 		Queue:                      queue,
 		MessageID:                  message.MessageID,

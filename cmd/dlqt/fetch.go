@@ -76,7 +76,7 @@ func fetch(ctx context.Context, cmd *cli.Command) error {
 	log.Printf("unescaped response body: %s", unescapedBody)
 
 	// parse JSON response
-	var message servicebus.MessageResponse
+	var message servicebus.Message
 	err = json.Unmarshal([]byte(unescapedBody), &message)
 	if err != nil {
 		return fmt.Errorf("failed to parse JSON response: %w", err)

@@ -5,7 +5,7 @@ import (
 )
 
 // JSON-serializable version of a Service Bus message
-type MessageResponse struct {
+type Message struct {
 	Namespace                  string         `json:"namespace"`
 	Queue                      string         `json:"queue"`
 	MessageID                  string         `json:"messageID"`
