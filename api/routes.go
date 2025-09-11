@@ -79,7 +79,7 @@ func fetchHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html.EscapeString(string(jsonData))))
+	w.Write(jsonData)
 }
 
 func retriggerHandler(w http.ResponseWriter, r *http.Request) {
