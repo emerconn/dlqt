@@ -32,8 +32,8 @@ func main() {
 
 	cmd := &cli.Command{
 		Name:                   "dlqt",
-		Version:                "v0.3.0",
-		Usage:                  "Developer tool for interacting with Azure Service Bus DLQ",
+		Version:                "v0.3.1",
+		Usage:                  "CLI tool for managing & interacting with Azure Service Bus Dead Letter Queues",
 		EnableShellCompletion:  true,
 		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
@@ -147,7 +147,7 @@ func main() {
 			// fetch
 			{
 				Name:  "fetch",
-				Usage: "Fetch one message from the dead letter queue",
+				Usage: "Fetch one message from the dead letter queue (API required)",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return fetch(ctx, cmd)
 				},
@@ -155,7 +155,7 @@ func main() {
 			// retrigger
 			{
 				Name:  "retrigger",
-				Usage: "Retrigger one message from the dead letter queue",
+				Usage: "Retrigger one message from the dead letter queue (API required)",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return retrigger(ctx, cmd)
 				},
