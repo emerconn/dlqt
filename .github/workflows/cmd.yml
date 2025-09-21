@@ -42,7 +42,7 @@ jobs:
       with:
         go-version-file: ./go.mod
 
-    - name: Build
+    - name: Build optimized binaries
       run: |
         CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
           -ldflags="-s -w" \
@@ -53,11 +53,26 @@ jobs:
           mv ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}.exe
         fi
 
-    - name: Upload build artifacts
+    - name: Build debug binaries
+      run: |
+        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
+          -o ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug \
+          ./cmd/${{ matrix.cmd }}
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          mv ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug.exe
+        fi
+
+    - name: Upload optimized binaries
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}
         path: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
+
+    - name: Upload debug binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug
+        path: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug${{ matrix.goos == 'windows' && '.exe' || '' }}
 
   release:
     runs-on: ubuntu-latest
@@ -65,12 +80,14 @@ jobs:
     if: github.event_name == 'release'
 
     steps:
-    - name: Download artifacts
+    - name: Download optimized binaries
       uses: actions/download-artifact@v5
       with:
         path: artifacts
+        pattern: '*-*-*'
+        merge-multiple: true
 
     - name: Upload to release
       uses: softprops/action-gh-release@v2
       with:
-        files: artifacts/**/*
+        files: artifacts/*
