@@ -31,9 +31,9 @@ func main() {
 	}
 
 	cmd := &cli.Command{
-		Name:                   "dlqtools",
+		Name:                   "dlqt",
 		Version:                "v0.2.4",
-		Usage:                  "Admin crud for the dlqt CLI tool",
+		Usage:                  "Developer tool for interacting with Azure Service Bus DLQ",
 		EnableShellCompletion:  true,
 		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
@@ -51,8 +51,33 @@ func main() {
 				Sources:  cli.EnvVars("AZURE_SERVICEBUS_QUEUE"),
 				Required: true,
 			},
+			&cli.StringFlag{
+				Name:     "api-url",
+				Usage:    "the API service URL",
+				Sources:  cli.EnvVars("API_URL"),
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "api-client-id",
+				Usage:    "the API client ID",
+				Sources:  cli.EnvVars("API_AZURE_CLIENT_ID"),
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "cmd-client-id",
+				Usage:    "the CMD client ID",
+				Sources:  cli.EnvVars("CMD_AZURE_CLIENT_ID"),
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "cmd-tenant-id",
+				Usage:    "the CMD tenant ID",
+				Sources:  cli.EnvVars("CMD_AZURE_TENANT_ID"),
+				Required: false,
+			},
 		},
 		Commands: []*cli.Command{
+			// seed
 			{
 				Name:  "seed",
 				Usage: "Seed the dead-letter queue with test messages",
@@ -79,13 +104,6 @@ func main() {
 									},
 								},
 							},
-							{
-								&cli.StringFlag{
-									Name:     "json-messages",
-									Usage:    "a JSON file containing messages to send",
-									Required: false,
-								},
-							},
 						},
 					},
 				},
@@ -97,6 +115,7 @@ func main() {
 					},
 				},
 			},
+			// purge
 			{
 				Name:  "purge",
 				Usage: "Purge the queue and dead-letter queue of all messages",
@@ -122,6 +141,29 @@ func main() {
 								},
 							},
 						},
+					},
+				},
+			},
+			// fetch
+			{
+				Name:  "fetch",
+				Usage: "Fetch one message from the dead letter queue",
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return fetch(ctx, cmd)
+				},
+			},
+			// retrigger
+			{
+				Name:  "retrigger",
+				Usage: "Retrigger one message from the dead letter queue",
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return retrigger(ctx, cmd)
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "message-id",
+						Usage:    "the message ID to retrigger",
+						Required: true,
 					},
 				},
 			},
