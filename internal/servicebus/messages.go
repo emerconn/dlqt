@@ -57,11 +57,10 @@ func DeadLetterMessages(ctx context.Context, client *azservicebus.Client, queue 
 	defer receiver.Close(ctx)
 
 	// dead-letter messages in batches until count is reached
-	maxMessages := 100
 	receivedMessages := 0
 	for receivedMessages < count {
-		log.Printf("receiving %d messages", maxMessages)
-		messages, err := receiver.ReceiveMessages(ctx, maxMessages, nil)
+		log.Printf("receiving %d messages", count)
+		messages, err := receiver.ReceiveMessages(ctx, count, nil)
 		if err != nil {
 			return fmt.Errorf("failed to receive messages: %w", err)
 		}
