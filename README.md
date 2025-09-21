@@ -53,7 +53,7 @@ graph TD
     F -->|federated identity<br>continuous on main| B2
 
     subgraph "CLI"
-        H["dlqt<br>(dev)"] <-->|MSAL| B2
+        H["dlqt"] <-->|MSAL| B2
     end
 
     A -->|federated identity| B
