@@ -26,7 +26,7 @@ permissions:
   contents: write
 
 jobs:
-  build-optimized:
+  optimized:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -59,7 +59,7 @@ jobs:
         name: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}
         path: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
 
-  build-debug:
+  debug:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -92,7 +92,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: build-optimized
+    needs: optimized
     if: github.event_name == 'release'
 
     steps:
