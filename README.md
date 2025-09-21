@@ -1,6 +1,6 @@
 # dlqt
 
-CLI tool for managing & interacting with Azure Service Bus Dead Letter Queues (DLQ)
+CLI tool for managing & interacting with Azure Service Bus Dead Letter Queues
 
 ## Usage
 
