@@ -71,7 +71,9 @@ func main() {
 									Required: false,
 									Action: func(ctx context.Context, cmd *cli.Command, v int) error {
 										if v <= 0 {
-											return fmt.Errorf("num-messages value '%v' must be greater than 0", v)
+											return fmt.Errorf("num-messages must be greater than 0, got %d", v)
+										} else if v > 2048 {
+											return fmt.Errorf("num-messages must be less than or equal to 2048, got %d", v)
 										}
 										return nil
 									},
