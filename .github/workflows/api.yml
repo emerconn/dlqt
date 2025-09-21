@@ -101,9 +101,65 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
 
-  deploy:
+  trivy-slim:
     runs-on: ubuntu-latest
     needs: build-slim
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Extract SHA tag
+      id: sha-tag
+      run: |
+        SHA_TAG=$(echo '${{ needs.build-slim.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
+        echo "tag=${SHA_TAG}" >> $GITHUB_OUTPUT
+
+    - name: Run Trivy vulnerability scanner on slim image
+      uses: aquasecurity/trivy-action@0.33.1
+      with:
+        image-ref: ${{ steps.sha-tag.outputs.tag }}
+        format: 'sarif'
+        output: 'trivy-slim-results.sarif'
+
+    - name: Upload Trivy scan results for slim image to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-slim-results.sarif'
+        category: 'slim-image'
+
+  trivy-debug:
+    runs-on: ubuntu-latest
+    needs: build-debug
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Extract SHA tag
+      id: sha-tag
+      run: |
+        SHA_TAG=$(echo '${{ needs.build-debug.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
+        echo "tag=${SHA_TAG}" >> $GITHUB_OUTPUT
+
+    - name: Run Trivy vulnerability scanner on debug image
+      uses: aquasecurity/trivy-action@0.33.1
+      with:
+        image-ref: ${{ steps.sha-tag.outputs.tag }}
+        format: 'sarif'
+        output: 'trivy-debug-results.sarif'
+
+    - name: Upload Trivy scan results for debug image to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-debug-results.sarif'
+        category: 'debug-image'
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [ build-slim, trivy-slim, trivy-debug ]
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     concurrency:
       group: deploy-${{ github.workflow }}-${{ github.ref }}
@@ -132,30 +188,3 @@ jobs:
         imageToDeploy: ${{ steps.sha-tag.outputs.tag }}
         containerAppName: ca-dlqt-api
         resourceGroup: rg-dlqt
-
-  trivy:
-    runs-on: ubuntu-latest
-    needs: build-slim
-    permissions:
-      contents: read
-      security-events: write
-
-    steps:
-    - name: Extract SHA tag
-      id: sha-tag
-      run: |
-        SHA_TAG=$(echo '${{ needs.build-slim.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
-        echo "tag=${SHA_TAG}" >> $GITHUB_OUTPUT
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.33.1
-      with:
-        image-ref: ${{ steps.sha-tag.outputs.tag }}
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
