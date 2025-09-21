@@ -4,8 +4,7 @@ on:
   push:
     branches: [ '*' ]
     paths:
-    - 'cmd/dlqt/**'
-    - 'cmd/dlqtools/**'
+    - 'cmd/**'
     - 'internal/**'
     - 'go.mod'
     - 'go.sum'
@@ -13,8 +12,7 @@ on:
   pull_request:
     branches: [ '*' ]
     paths:
-    - 'cmd/dlqt/**'
-    - 'cmd/dlqtools/**'
+    - 'cmd/**'
     - 'internal/**'
     - 'go.mod'
     - 'go.sum'
@@ -30,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cmd: [ dlqt, dlqtools ]
+        cmd: [ dlqt ]
         goos: [ darwin, freebsd, linux, windows ]
         goarch: [ amd64, arm64 ]
 
@@ -63,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cmd: [ dlqt, dlqtools ]
+        cmd: [ dlqt ]
         goos: [ darwin, freebsd, linux, windows ]
         goarch: [ amd64, arm64 ]
 
