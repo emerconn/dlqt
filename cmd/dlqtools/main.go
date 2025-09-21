@@ -32,7 +32,7 @@ func main() {
 
 	cmd := &cli.Command{
 		Name:                   "dlqtools",
-		Version:                "v0.2.1",
+		Version:                "v0.2.2",
 		Usage:                  "Admin crud for the dlqt CLI tool",
 		EnableShellCompletion:  true,
 		UseShortOptionHandling: true,
