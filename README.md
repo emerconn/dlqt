@@ -1,9 +1,9 @@
 # dlqt
- 
-CLI tool suite for interacting with Azure Service Bus DLQ 
- 
+
+CLI tool for managing & interacting with Azure Service Bus Dead Letter Queues (DLQ)
+
 ## Usage
- 
+
 ### `dlqt`
  
 - CLI tool for interacting with the API service and directly interacting with DLQ messages
@@ -16,14 +16,14 @@ CLI tool suite for interacting with Azure Service Bus DLQ
 - runs in Azure Container Apps with managed identity
 - authenticates users via MSAL tokens
 - provides fine-grained access control for message reading and retriggering
- 
+
 ## Architecture
- 
+
 The system consists of:
 1. `dlqt` - Developer CLI tool for secure message retriggering
 2. `api` - Containerized API service for secure message retriggering
 3. Azure Service Bus with RBAC for the API service
- 
+
 ```mermaid
 graph TD
     subgraph "GitHub"
@@ -59,12 +59,12 @@ graph TD
 - Developers use `dlqt retrigger` which calls the `api` API with their Azure AD token
 - The API service validates the token and performs the retrigger operation using its managed identity
 - Developers cannot modify message contents, only retrigger
- 
+
 **Admin Workflow:**
 - Admins use `dlqt seed` & `dlqt purge` with direct Service Bus access for full queue management
 
 ## Build
- 
+
 ### `dlqt`
  
 - local
@@ -105,8 +105,8 @@ docker push <your-registry>/dlqt/api:latest
 3. Update the container app image in Terraform and redeploy
 
 ## To Do
- 
+
 ### `dlqt`
- 
+
 - [ ] API, used Azure AD groups and something idk?
 - [ ] add more developer-friendly features
