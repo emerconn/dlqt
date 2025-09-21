@@ -46,7 +46,7 @@ jobs:
           -ldflags="-s -w" \
           -trimpath \
           -o ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} \
-          ./cmd/${{ matrix.cmd }}
+          ./cmd
         if [ "${{ matrix.goos }}" = "windows" ]; then
           mv ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}.exe
         fi
@@ -77,7 +77,7 @@ jobs:
       run: |
         CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
           -o ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug \
-          ./cmd/${{ matrix.cmd }}
+          ./cmd
         if [ "${{ matrix.goos }}" = "windows" ]; then
           mv ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug.exe
         fi
