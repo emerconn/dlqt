@@ -6,15 +6,9 @@ CLI tool suite for interacting with Azure Service Bus DLQ
  
 ### `dlqt`
  
-- Developer oriented, for reading and retriggering DLQ messages
-- uses Entra auth (MSAL) via App Registrations
+- CLI tool for interacting with the API service and directly interacting with DLQ messages
+- uses MSAL auth for the API, uses `az login` for direct DLQ access
 - run `dlqt -h` for usage info
-
-### `dlqtools`
-
-- Admin oriented, for managing/testing DLQ messages
-- uses `az login` for auth (requires Service Bus Data Owner role)
-- run `dlqtools -h` for usage info
 
 ### `api`
 
@@ -27,9 +21,8 @@ CLI tool suite for interacting with Azure Service Bus DLQ
  
 The system consists of:
 1. `dlqt` - Developer CLI tool for secure message retriggering
-2. `dlqtools` - Admin CLI tool with direct Service Bus access
-3. `api` - Containerized API service for secure message retriggering
-4. Azure Service Bus with RBAC for the API service
+2. `api` - Containerized API service for secure message retriggering
+3. Azure Service Bus with RBAC for the API service
  
 ```mermaid
 graph TD
@@ -55,12 +48,11 @@ graph TD
 
     subgraph "CLI"
         H["dlqt<br>(dev)"] <-->|MSAL| B2
-        K["dlqtools<br>(admin)"] <-->|AZ SDK| B3
     end
 
     A -->|federated identity| B
     G -->|download to local| H
-    G -->|download to local| K
+    H <-->|AZ SDK| B3
 ```
 
 **Developer Workflow:**
@@ -69,8 +61,7 @@ graph TD
 - Developers cannot modify message contents, only retrigger
  
 **Admin Workflow:**
-- Admins use `dlqtools` with direct Service Bus access for full queue management
-- Includes seed, purge, and other admin operations
+- Admins use `dlqt seed` & `dlqt purge` with direct Service Bus access for full queue management
 
 ## Build
  
@@ -81,16 +72,6 @@ graph TD
   go install ./cmd/dlqt && source <(dlqt completion zsh)
   which dlqt
   dlqt -h
-  ```
-- shipped (see GitHub)
-
-### `dlqtools`
-
-- local
-  ```bash
-  go install ./cmd/dlqtools && source <(dlqtools completion zsh)
-  which dlqtools
-  dlqtools -h
   ```
 - shipped (see GitHub)
 
@@ -129,7 +110,3 @@ docker push <your-registry>/dlqt/api:latest
  
 - [ ] API, used Azure AD groups and something idk?
 - [ ] add more developer-friendly features
-
-### `dlqtools`
-
-- [x] DLQ purge command
