@@ -21,7 +21,7 @@ on:
     types: [ created ]
 
 jobs:
-  build:
+  build-slim:
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -51,18 +51,59 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push
+    - name: Build and push slim image
       uses: docker/build-push-action@v6
       with:
         context: .
         file: ./api/Dockerfile
+        target: slim
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  build-debug:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    outputs:
+      image-tags: ${{ steps.meta.outputs.tags }}
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Docker meta for debug
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/api
+        tags: |
+          type=semver,pattern={{version}}-debug
+          type=semver,pattern={{major}}.{{minor}}-debug
+          type=semver,pattern={{major}}-debug
+          type=ref,event=branch,suffix=-debug
+          type=ref,event=pr,suffix=-debug
+          type=sha,suffix=-debug
+
+    - name: Login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push debug image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ./api/Dockerfile
+        target: debug
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-slim
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     concurrency:
       group: deploy-${{ github.workflow }}-${{ github.ref }}
@@ -75,7 +116,7 @@ jobs:
     - name: Extract SHA tag
       id: sha-tag
       run: |
-        SHA_TAG=$(echo '${{ needs.build.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
+        SHA_TAG=$(echo '${{ needs.build-slim.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
         echo "tag=${SHA_TAG}" >> $GITHUB_OUTPUT
 
     - name: Login to Azure
@@ -94,7 +135,7 @@ jobs:
 
   trivy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-slim
     permissions:
       contents: read
       security-events: write
@@ -103,7 +144,7 @@ jobs:
     - name: Extract SHA tag
       id: sha-tag
       run: |
-        SHA_TAG=$(echo '${{ needs.build.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
+        SHA_TAG=$(echo '${{ needs.build-slim.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
         echo "tag=${SHA_TAG}" >> $GITHUB_OUTPUT
 
     - name: Run Trivy vulnerability scanner
