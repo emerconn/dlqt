@@ -1,3 +1,7 @@
+<div align="center">
+[![API](https://github.com/emerconn/dlqt/actions/workflows/api.yml/badge.svg?branch=main)](https://github.com/emerconn/dlqt/actions/workflows/api.yml)[![CMD](https://github.com/emerconn/dlqt/actions/workflows/cmd.yml/badge.svg?branch=main)](https://github.com/emerconn/dlqt/actions/workflows/cmd.yml)
+</div>
+
 # dlqt
 
 CLI tool for managing & interacting with Azure Service Bus Dead Letter Queues
