@@ -140,7 +140,7 @@ jobs:
     - name: Extract SHA tag
       id: sha-tag
       run: |
-        SHA_TAG=$(echo '${{ needs.build-debug.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}$' | head -n1)
+        SHA_TAG=$(echo '${{ needs.build-debug.outputs.image-tags }}' | grep -E ':sha-[a-f0-9]{7}-debug$' | head -n1)
         echo "tag=${SHA_TAG}" >> $GITHUB_OUTPUT
 
     - name: Run Trivy vulnerability scanner on debug image
