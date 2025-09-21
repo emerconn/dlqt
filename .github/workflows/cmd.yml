@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         cmd: [ dlqt, dlqtools ]
-        goos: [ linux, windows, darwin ]
+        goos: [ darwin, freebsd, linux, windows ]
         goarch: [ amd64, arm64 ]
 
     steps:
