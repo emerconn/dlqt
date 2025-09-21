@@ -1,6 +1,8 @@
-<p align="center">
+<div align="center">
+
 [![API](https://github.com/emerconn/dlqt/actions/workflows/api.yml/badge.svg?branch=main)](https://github.com/emerconn/dlqt/actions/workflows/api.yml)[![CMD](https://github.com/emerconn/dlqt/actions/workflows/cmd.yml/badge.svg?branch=main)](https://github.com/emerconn/dlqt/actions/workflows/cmd.yml)
-</p>
+
+</div>
 
 # dlqt
 
