@@ -44,7 +44,11 @@ jobs:
 
     - name: Build
       run: |
-        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/${{ matrix.cmd }}
+        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
+          -ldflags="-s -w" \
+          -trimpath \
+          -o ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} \
+          ./cmd/${{ matrix.cmd }}
         if [ "${{ matrix.goos }}" = "windows" ]; then
           mv ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}.exe
         fi
