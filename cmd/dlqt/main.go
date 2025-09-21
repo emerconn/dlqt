@@ -32,7 +32,7 @@ func main() {
 
 	cmd := &cli.Command{
 		Name:                   "dlqt",
-		Version:                "v0.2.3",
+		Version:                "v0.2.4",
 		Usage:                  "Developer tool for interacting with Azure Service Bus DLQ",
 		EnableShellCompletion:  true,
 		UseShortOptionHandling: true,

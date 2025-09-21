@@ -26,7 +26,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  slim:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -44,29 +44,65 @@ jobs:
 
     - name: Build
       run: |
-        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/${{ matrix.cmd }}
+        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
+          -ldflags="-s -w" \
+          -trimpath \
+          -o ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} \
+          ./cmd/${{ matrix.cmd }}
         if [ "${{ matrix.goos }}" = "windows" ]; then
           mv ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }} ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}.exe
         fi
 
-    - name: Upload build artifacts
+    - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}
         path: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
 
+  debug:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cmd: [ dlqt, dlqtools ]
+        goos: [ darwin, freebsd, linux, windows ]
+        goarch: [ amd64, arm64 ]
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: ./go.mod
+
+    - name: Build
+      run: |
+        CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
+          -o ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug \
+          ./cmd/${{ matrix.cmd }}
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          mv ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug.exe
+        fi
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug
+        path: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug${{ matrix.goos == 'windows' && '.exe' || '' }}
+
   release:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [ slim, debug ]
     if: github.event_name == 'release'
 
     steps:
-    - name: Download artifacts
+    - name: Download binaries
       uses: actions/download-artifact@v5
       with:
         path: artifacts
+        merge-multiple: true
 
     - name: Upload to release
       uses: softprops/action-gh-release@v2
       with:
-        files: artifacts/**/*
+        files: artifacts/*
