@@ -3,8 +3,8 @@
 # this script does not work for Basic SKU Service Bus
 # supported Service Bus SKUs is Standard and Premium
  
-resource_group="rg-itops-econnelly-dev"
-namespace="bairditopseconnellydevsbns"
+resource_group=""
+namespace=""
 main_queue="test"
 fwdr_queue="${main_queue}-fwdr"
  
