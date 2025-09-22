@@ -1,11 +1,11 @@
 #!/usr/bin/bash
-
+ 
 # this script does not work for Basic SKU Service Bus
-# Supported Service Bus SKUs is Standard and Premium
-
-resource_group=""
-namespace=""
-main_queue=""
+# supported Service Bus SKUs is Standard and Premium
+ 
+resource_group="rg-itops-econnelly-dev"
+namespace="bairditopseconnellydevsbns"
+main_queue="test"
 fwdr_queue="${main_queue}-fwdr"
  
 # create fwdr queue
@@ -16,9 +16,10 @@ az servicebus queue create \
   --name "$fwdr_queue" \
   --forward-to $main_queue
  
-sleep 1
+echo "sleeping 10 seconds..."
+sleep 10
  
-# enable main queue's DLQ forwarder
+# enable main queue's DLQ forwarder to fwdr queue
 echo "enabling DLQ message forwarder on $main_queue to $fwdr_queue"
 az servicebus queue update \
   --resource-group $resource_group \
@@ -26,7 +27,8 @@ az servicebus queue update \
   --name $main_queue \
   --forward-dead-lettered-messages-to "$fwdr_queue"
  
-sleep 1
+echo "sleeping 10 seconds..."
+sleep 10
  
 # wait for main queue's DLQ messages to be forwarded to fwdr queue
 while true; do
@@ -38,8 +40,8 @@ while true; do
         --query "countDetails.deadLetterMessageCount" -o tsv)
  
     if [ "$dlq_message_count" -gt 0 ]; then
-        echo "$main_queue has $dlq_message_count DLQ messages left, checking again in 3 seconds..."
-        sleep 3
+        echo "$main_queue has $dlq_message_count DLQ messages left, checking again in 10 seconds..."
+        sleep 10
     else
         echo "$main_queue has no DLQ messages left"
         break
@@ -67,8 +69,8 @@ while true; do
         --query "countDetails.activeMessageCount" -o tsv)
  
     if [ "$fwdr_message_count" -gt 0 ]; then
-        echo "$fwdr_queue has $fwdr_message_count messages left, checking again in 3 seconds..."
-        sleep 3
+        echo "$fwdr_queue has $fwdr_message_count messages left, checking again in 10 seconds..."
+        sleep 10
     else
         echo "$fwdr_queue has no messages left"
         break
