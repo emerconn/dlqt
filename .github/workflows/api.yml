@@ -124,7 +124,7 @@ jobs:
         output: 'trivy-slim-results.sarif'
 
     - name: Upload Trivy scan results for slim image to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: always()
       with:
         sarif_file: 'trivy-slim-results.sarif'
@@ -152,7 +152,7 @@ jobs:
         output: 'trivy-debug-results.sarif'
 
     - name: Upload Trivy scan results for debug image to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: always()
       with:
         sarif_file: 'trivy-debug-results.sarif'
