@@ -52,7 +52,7 @@ jobs:
         fi
 
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}
         path: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}
@@ -83,7 +83,7 @@ jobs:
         fi
 
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug
         path: ${{ matrix.cmd }}-${{ matrix.goos }}-${{ matrix.goarch }}-debug${{ matrix.goos == 'windows' && '.exe' || '' }}
@@ -95,7 +95,7 @@ jobs:
 
     steps:
     - name: Download binaries
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v8
       with:
         path: artifacts
         merge-multiple: true
